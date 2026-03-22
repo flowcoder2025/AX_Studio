@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — 14 Category Template Map</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;padding:24px;max-width:800px;margin:0 auto}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.subtitle{font-size:13px;color:#888;margin-bottom:20px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-bottom:20px}
+.cat-card{background:#fff;border:1px solid #e5e3de;border-radius:8px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.cat-card:hover{border-color:#aaa}
+.cat-card.active{border:2px solid #2563eb;background:#f8faff}
+.cat-name{font-size:13px;font-weight:600}
+.cat-sub{font-size:10px;color:#999;margin-top:2px}
+.cat-tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:10px;margin-top:4px}
+.tag-orig{background:#E6F1FB;color:#0C447C}
+.tag-new{background:#E1F5EE;color:#085041}
+.detail{background:#fff;border-radius:12px;padding:20px;border:1px solid #e5e3de}
+.detail-title{font-size:17px;font-weight:600;margin-bottom:2px}
+.detail-desc{font-size:12px;color:#888;margin-bottom:14px}
+.block-list{display:flex;flex-direction:column;gap:4px}
+.b-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;font-size:12px;background:#fafafa;border:0.5px solid #eee}
+.b-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.b-name{font-weight:600;flex:1}
+.b-src{font-size:9px;padding:1px 6px;border-radius:10px;flex-shrink:0}
+.src-claude{background:#E6F1FB;color:#0C447C}
+.src-comfy{background:#FAECE7;color:#712B13}
+.src-ffmpeg{background:#FAEEDA;color:#633806}
+.b-type{font-size:10px;color:#aaa}
+.tone-bar{display:flex;gap:4px;margin:12px 0 8px}
+.tone-chip{font-size:11px;padding:3px 8px;border-radius:4px;background:#EEEDFE;color:#3C3489;border:1px solid #AFA9EC}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:11px;color:#888}
+.legend span{display:flex;align-items:center;gap:4px}
+.ldot{width:8px;height:8px;border-radius:50%}
+.note{font-size:12px;color:#888;margin-top:10px;padding:10px;background:#fafafa;border-radius:6px;border:1px solid #eee;line-height:1.5}
+.vslots{margin-top:12px}
+.vslot{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;margin-top:4px;font-size:12px;background:#fafafa;border:0.5px solid #eee}
+</style>
+</head>
+<body>
+<h1>AX Studio — Template System</h1>
+<p class="subtitle">14개 카테고리 × 24개 블록 타입 · 카테고리를 클릭하면 블록 순서 확인</p>
+
+<div class="legend">
+  <span><span class="ldot" style="background:#B5D4F4"></span> Claude</span>
+  <span><span class="ldot" style="background:#F5C4B3"></span> ComfyUI</span>
+  <span><span class="ldot" style="background:#FAC775"></span> FFmpeg</span>
+  <span style="margin-left:auto"><span class="ldot" style="background:#B5D4F4"></span> original</span>
+  <span><span class="ldot" style="background:#9FE1CB"></span> new</span>
+</div>
+
+<div class="cat-grid" id="catGrid"></div>
+<div class="detail" id="detail"></div>
+
+<script>
+const T=[
+{id:'grooming',name:'Grooming',sub:'면도기/트리머/미용기기',tag:'orig',tone:['프리미엄','기술력','남성타겟'],blocks:[{n:'hero',src:'claude',type:'카피+KPI'},{n:'video_360',src:'comfy',type:'360° 회전'},{n:'painpoint',src:'claude',type:'고민 공감'},{n:'solution',src:'claude',type:'차별화'},{n:'feature',src:'comfy',type:'기능 이미지'},{n:'video_demo',src:'comfy',type:'기능 시연'},{n:'tech',src:'claude',type:'기술 설명'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'후기'},{n:'spec',src:'claude',type:'스펙'},{n:'faq',src:'claude',type:'FAQ'},{n:'howto',src:'claude',type:'사용법'},{n:'video_short',src:'ffmpeg',type:'텍스트 숏폼'},{n:'cta',src:'claude',type:'패키지+구매'}],videos:['360° 회전','면도 시연','텍스트 모션'],note:'다크 톤 히어로, 스펙 강조, 남성 타겟 카피'},
+{id:'beauty',name:'Beauty',sub:'스킨케어/메이크업/헤어',tag:'orig',tone:['클린','수분감','여성타겟'],blocks:[{n:'hero',src:'claude',type:'카피+KPI'},{n:'painpoint',src:'claude',type:'피부 고민'},{n:'solution',src:'claude',type:'차별화'},{n:'ingredient',src:'claude',type:'핵심 성분'},{n:'feature',src:'comfy',type:'텍스처 이미지'},{n:'video_ba',src:'comfy',type:'Before→After'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'후기'},{n:'compare',src:'comfy',type:'전후 비교'},{n:'howto',src:'claude',type:'사용법'},{n:'spec',src:'claude',type:'전성분'},{n:'certification',src:'claude',type:'피부 테스트'},{n:'faq',src:'claude',type:'FAQ'},{n:'video_short',src:'ffmpeg',type:'텍스트 숏폼'},{n:'cta',src:'claude',type:'구매'}],videos:['Before→After','성분 모션','텍스트 숏폼'],note:'파스텔 톤, 성분 깊이 강조, Before→After 필수'},
+{id:'food',name:'건강식품',sub:'프로바이오틱스/비타민/건강즙',tag:'orig',tone:['신뢰','건강','자연'],blocks:[{n:'hero',src:'claude',type:'신뢰 KPI'},{n:'trust',src:'claude',type:'판매량 강조'},{n:'review',src:'claude',type:'체험 후기'},{n:'ingredient',src:'claude',type:'성분+함량'},{n:'process',src:'comfy',type:'제조 공정'},{n:'video_demo',src:'comfy',type:'성분 모션'},{n:'certification',src:'claude',type:'GMP/HACCP'},{n:'feature',src:'comfy',type:'흡수율'},{n:'compare',src:'claude',type:'타사 비교'},{n:'howto',src:'claude',type:'섭취법'},{n:'spec',src:'claude',type:'영양정보'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'구매'}],videos:['제조 공정','성분 모션'],note:'신뢰 지표 상단, 인증/GMP 강조, 성분 함량 상세'},
+{id:'living_appliance',name:'생활가전',sub:'청소기/공기청정기/건조기',tag:'orig',tone:['스펙','파워','실용'],blocks:[{n:'hero',src:'claude',type:'스펙 KPI'},{n:'video_360',src:'comfy',type:'360° 회전'},{n:'painpoint',src:'claude',type:'기존 불편'},{n:'solution',src:'claude',type:'스펙 차별화'},{n:'feature',src:'comfy',type:'핵심기능'},{n:'video_demo',src:'comfy',type:'기능 시연'},{n:'compare',src:'claude',type:'스펙 비교'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'후기'},{n:'spec',src:'claude',type:'상세 스펙'},{n:'howto',src:'claude',type:'설치/사용'},{n:'faq',src:'claude',type:'FAQ'},{n:'video_short',src:'ffmpeg',type:'텍스트 숏폼'},{n:'cta',src:'claude',type:'구매'}],videos:['360° 회전','흡입력 시연','텍스트 숏폼'],note:'스펙 수치 대형 표시, 경쟁사 비교, 기능 시연 필수'},
+{id:'living_goods',name:'생활용품',sub:'세제/섬유유연제/방향제',tag:'orig',tone:['감성','일상','부드러움'],blocks:[{n:'hero',src:'claude',type:'신뢰 KPI'},{n:'trust',src:'claude',type:'판매량'},{n:'review',src:'claude',type:'감성 후기'},{n:'painpoint',src:'claude',type:'일상 불편'},{n:'solution',src:'claude',type:'향/성분'},{n:'ingredient',src:'claude',type:'향료/성분'},{n:'feature',src:'comfy',type:'사용감'},{n:'video_ba',src:'comfy',type:'세탁 전후'},{n:'certification',src:'claude',type:'저자극'},{n:'spec',src:'claude',type:'사양'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'대용량 번들'}],videos:['세탁 전후','텍스처 모션'],note:'감성 카피 중심, 향 설명 특화, 대용량 번들 CTA'},
+{id:'kids',name:'유아용품',sub:'로션/세정제/기저귀/이유식',tag:'orig',tone:['안전','순한','엄마타겟'],blocks:[{n:'hero',src:'claude',type:'안전 KPI'},{n:'trust',src:'claude',type:'사용자수'},{n:'review',src:'claude',type:'육아맘 후기'},{n:'painpoint',src:'claude',type:'피부 걱정'},{n:'solution',src:'claude',type:'순한 성분'},{n:'ingredient',src:'claude',type:'EWG 안전성'},{n:'certification',src:'claude',type:'피부 테스트'},{n:'feature',src:'comfy',type:'사용 장면'},{n:'howto',src:'claude',type:'사용법'},{n:'spec',src:'claude',type:'전성분'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'구매'}],videos:['사용 장면 모션'],note:'안전/인증 최우선, EWG 등급, 부모 신뢰 카피'},
+{id:'auto',name:'자동차용품',sub:'충전기/거치대/세차용품',tag:'orig',tone:['실용','호환성','운전'],blocks:[{n:'hero',src:'claude',type:'핵심 스펙'},{n:'painpoint',src:'claude',type:'운전 불편'},{n:'solution',src:'claude',type:'호환성'},{n:'feature',src:'comfy',type:'설치 장면'},{n:'video_demo',src:'comfy',type:'설치 시연'},{n:'compare',src:'claude',type:'호환 기종'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'후기'},{n:'spec',src:'claude',type:'스펙'},{n:'howto',src:'claude',type:'설치 가이드'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'구매'}],videos:['설치 시연','대시보드 360°'],note:'호환성 테이블 필수, 설치 가이드 상세'},
+{id:'fashion',name:'패션/의류',sub:'의류/신발/가방/악세서리',tag:'new',tone:['스타일','핏감','트렌드'],blocks:[{n:'hero',src:'claude',type:'룩북 카피'},{n:'feature',src:'comfy',type:'착용 이미지'},{n:'video_360',src:'comfy',type:'360° 착용'},{n:'material',src:'claude',type:'소재/원단'},{n:'size_guide',src:'claude',type:'사이즈 가이드'},{n:'styling',src:'comfy',type:'코디 제안'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'착용 후기'},{n:'spec',src:'claude',type:'소재/세탁'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'사이즈+구매'}],videos:['360° 착용','코디 숏폼'],note:'사이즈 가이드 필수, 코디 제안, 컬러 바리에이션'},
+{id:'electronics',name:'전자기기/IT',sub:'이어폰/키보드/모니터',tag:'new',tone:['테크','디테일','비교'],blocks:[{n:'hero',src:'claude',type:'스펙 대형'},{n:'video_360',src:'comfy',type:'360° 제품'},{n:'feature',src:'comfy',type:'핵심 기능'},{n:'video_demo',src:'comfy',type:'기능 시연'},{n:'compare',src:'claude',type:'경쟁사 비교'},{n:'tech',src:'claude',type:'칩셋/기술'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'전문가 후기'},{n:'compatibility',src:'claude',type:'호환 기기'},{n:'spec',src:'claude',type:'풀스펙'},{n:'unboxing',src:'comfy',type:'구성품'},{n:'faq',src:'claude',type:'FAQ'},{n:'video_short',src:'ffmpeg',type:'스펙 숏폼'},{n:'cta',src:'claude',type:'구매'}],videos:['360° 회전','기능 시연','스펙 숏폼'],note:'스펙 비교 테이블, 호환성, 언박싱'},
+{id:'pet',name:'반려동물',sub:'사료/간식/용품/영양제',tag:'new',tone:['사랑','안전','건강'],blocks:[{n:'hero',src:'claude',type:'신뢰 KPI'},{n:'painpoint',src:'claude',type:'반려 고민'},{n:'ingredient',src:'claude',type:'원료 안전성'},{n:'certification',src:'claude',type:'AAFCO'},{n:'feature',src:'comfy',type:'급여 장면'},{n:'video_demo',src:'comfy',type:'급여 시연'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'보호자 후기'},{n:'compare',src:'claude',type:'성분 비교'},{n:'howto',src:'claude',type:'급여 방법'},{n:'spec',src:'claude',type:'성분표'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'정기구독'}],videos:['급여 시연','성분 설명'],note:'성분 안전성, 급여량 가이드, 정기구독 CTA'},
+{id:'sports',name:'스포츠/피트니스',sub:'운동기구/웨어/보충제',tag:'new',tone:['액티브','성과','도전'],blocks:[{n:'hero',src:'claude',type:'성과 KPI'},{n:'video_demo',src:'comfy',type:'운동 시연'},{n:'painpoint',src:'claude',type:'운동 불편'},{n:'solution',src:'claude',type:'제품 효과'},{n:'feature',src:'comfy',type:'기능 상세'},{n:'video_ba',src:'comfy',type:'체형 변화'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'운동인 후기'},{n:'spec',src:'claude',type:'스펙'},{n:'howto',src:'claude',type:'운동 가이드'},{n:'faq',src:'claude',type:'FAQ'},{n:'video_short',src:'ffmpeg',type:'운동 숏폼'},{n:'cta',src:'claude',type:'구매'}],videos:['운동 시연','BA 체형','운동 숏폼'],note:'액션 영상, Before→After 체형, 운동 가이드'},
+{id:'kitchen',name:'주방/조리',sub:'조리도구/밀키트/식기',tag:'new',tone:['맛있는','편리','홈쿡'],blocks:[{n:'hero',src:'claude',type:'편의 KPI'},{n:'painpoint',src:'claude',type:'요리 불편'},{n:'solution',src:'claude',type:'편의성'},{n:'feature',src:'comfy',type:'조리 장면'},{n:'video_demo',src:'comfy',type:'조리 시연'},{n:'recipe',src:'claude',type:'활용 레시피'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'주부 후기'},{n:'spec',src:'claude',type:'사양'},{n:'howto',src:'claude',type:'사용/세척'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'구매'}],videos:['조리 시연','레시피 숏폼'],note:'조리 시연 핵심, 레시피 특화, 세척 편의성'},
+{id:'furniture',name:'가구/인테리어',sub:'의자/책상/수납/조명',tag:'new',tone:['공간','디자인','실용'],blocks:[{n:'hero',src:'claude',type:'공간 연출'},{n:'feature',src:'comfy',type:'공간 배치'},{n:'video_360',src:'comfy',type:'360° 제품'},{n:'material',src:'claude',type:'소재/마감'},{n:'size_guide',src:'claude',type:'치수 가이드'},{n:'styling',src:'comfy',type:'인테리어 연출'},{n:'trust',src:'claude',type:'만족도'},{n:'review',src:'claude',type:'입주 후기'},{n:'howto',src:'claude',type:'조립 가이드'},{n:'spec',src:'claude',type:'치수/소재'},{n:'faq',src:'claude',type:'FAQ'},{n:'cta',src:'claude',type:'구매'}],videos:['360° 회전','공간 연출'],note:'공간 연출 T2I 핵심, 치수 가이드, 조립 가이드'},
+{id:'digital',name:'디지털/구독',sub:'앱/SaaS/온라인강의',tag:'new',tone:['효율','성장','가치'],blocks:[{n:'hero',src:'claude',type:'가치 KPI'},{n:'painpoint',src:'claude',type:'기존 불편'},{n:'solution',src:'claude',type:'차별화'},{n:'feature',src:'comfy',type:'UI 스크린샷'},{n:'video_demo',src:'comfy',type:'서비스 시연'},{n:'pricing',src:'claude',type:'요금제 비교'},{n:'trust',src:'claude',type:'이용자수'},{n:'review',src:'claude',type:'후기'},{n:'faq',src:'claude',type:'FAQ'},{n:'video_short',src:'ffmpeg',type:'소개 숏폼'},{n:'cta',src:'claude',type:'무료체험'}],videos:['서비스 시연','소개 숏폼'],note:'UI 스크린샷, 요금제 비교, 무료체험 CTA'}
+];
+const srcCls={claude:'src-claude',comfy:'src-comfy',ffmpeg:'src-ffmpeg'};
+const srcLbl={claude:'Claude',comfy:'ComfyUI',ffmpeg:'FFmpeg'};
+const numBg={claude:'#B5D4F4',comfy:'#F5C4B3',ffmpeg:'#FAC775'};
+
+function renderGrid(){
+  document.getElementById('catGrid').innerHTML=T.map((c,i)=>`<div class="cat-card${i===0?' active':''}" onclick="showCat(${i})" id="cc${i}"><div class="cat-name">${c.name}</div><div class="cat-sub">${c.sub}</div><span class="cat-tag ${c.tag==='orig'?'tag-orig':'tag-new'}">${c.tag==='orig'?'original':'new'}</span></div>`).join('');
+}
+function showCat(idx){
+  document.querySelectorAll('.cat-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('cc'+idx).classList.add('active');
+  const c=T[idx];
+  document.getElementById('detail').innerHTML=`
+    <div class="detail-title">${c.name}</div>
+    <div class="detail-desc">${c.sub}</div>
+    <div class="tone-bar">${c.tone.map(t=>`<span class="tone-chip">${t}</span>`).join('')}</div>
+    <div class="block-list">${c.blocks.map((b,i)=>`<div class="b-row"><div class="b-num" style="background:${numBg[b.src]};color:#333">${i+1}</div><div class="b-name">${b.n}</div><div class="b-type">${b.type}</div><div class="b-src ${srcCls[b.src]}">${srcLbl[b.src]}</div></div>`).join('')}</div>
+    <div class="vslots"><div style="font-size:13px;font-weight:600;margin-bottom:4px">Video slots</div>${c.videos.map(v=>`<div class="vslot"><span style="color:#aaa;margin-right:4px">▶</span>${v}</div>`).join('')}</div>
+    <div class="note">${c.note}</div>`;
+}
+renderGrid();showCat(0);
+</script>
+</body>
+</html>

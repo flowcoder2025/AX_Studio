@@ -1,0 +1,115 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "product_cutout.png"
+    }
+  },
+  "2": {
+    "class_type": "ImageResizeKJ",
+    "inputs": {
+      "image": ["1", 0],
+      "width": 256,
+      "height": 256,
+      "upscale_method": "lanczos",
+      "keep_proportion": true,
+      "divisible_by": 1
+    }
+  },
+  "3": {
+    "class_type": "ImageOnlyCheckpointLoader",
+    "inputs": {
+      "ckpt_name": "stable_zero123.ckpt"
+    }
+  },
+  "4": {
+    "class_type": "CLIPVisionLoader",
+    "inputs": {
+      "clip_name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+    }
+  },
+  "5": {
+    "class_type": "StableZero123_Conditioning",
+    "inputs": {
+      "clip_vision": ["3", 1],
+      "init_image": ["2", 0],
+      "vae": ["3", 2],
+      "width": 256,
+      "height": 256,
+      "batch_size": 6,
+      "elevation": 15.0,
+      "azimuth": 0.0
+    }
+  },
+  "6": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["3", 0],
+      "positive": ["5", 0],
+      "negative": ["5", 1],
+      "latent_image": ["5", 2],
+      "seed": -1,
+      "steps": 75,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "sgm_uniform",
+      "denoise": 1.0
+    }
+  },
+  "7": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["6", 0],
+      "vae": ["3", 2]
+    }
+  },
+  "20": {
+    "class_type": "RIFE VFI",
+    "inputs": {
+      "ckpt_name": "rife49.pth",
+      "frames": ["7", 0],
+      "clear_cache_after_n_frames": 10,
+      "multiplier": 4,
+      "fast_mode": true,
+      "ensemble": true,
+      "scale_factor": 1.0,
+      "dtype": "float16",
+      "torch_compile": false,
+      "batch_size": 1
+    }
+  },
+  "30": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["20", 0],
+      "filename_prefix": "rotate360_frames"
+    }
+  },
+  "31": {
+    "class_type": "SaveAnimatedWEBP",
+    "inputs": {
+      "images": ["20", 0],
+      "filename_prefix": "rotate360_preview",
+      "fps": 12,
+      "lossless": false,
+      "quality": 85,
+      "method": "default"
+    }
+  },
+  "_meta": {
+    "name": "360° Product Rotation",
+    "ax_studio": {
+      "workflow_id": "rotate-360",
+      "input_nodes": {
+        "image": "1",
+        "elevation": "5",
+        "seed": "6"
+      },
+      "output_nodes": {
+        "frames": "30",
+        "preview_webp": "31"
+      },
+      "notes": "stable_zero123.ckpt 모델 필요. 미설치 시 Kling API fallback 사용."
+    }
+  }
+}

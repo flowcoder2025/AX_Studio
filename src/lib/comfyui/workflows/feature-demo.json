@@ -1,0 +1,121 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "product_cutout.png"
+    }
+  },
+  "2": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "sd_xl_base_1.0.safetensors"
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "modern lifestyle scene, clean desk, soft natural lighting, minimalist background, professional product photography",
+      "clip": ["2", 1]
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "blurry, text, watermark, low quality, cluttered, ugly",
+      "clip": ["2", 1]
+    }
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    }
+  },
+  "6": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["2", 0],
+      "positive": ["3", 0],
+      "negative": ["4", 0],
+      "latent_image": ["5", 0],
+      "seed": -1,
+      "steps": 25,
+      "cfg": 7.0,
+      "sampler_name": "euler_ancestral",
+      "scheduler": "normal",
+      "denoise": 1.0
+    }
+  },
+  "7": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["6", 0],
+      "vae": ["2", 2]
+    }
+  },
+  "10": {
+    "class_type": "ImageResizeKJ",
+    "inputs": {
+      "image": ["1", 0],
+      "width": 512,
+      "height": 512,
+      "upscale_method": "lanczos",
+      "keep_proportion": true,
+      "divisible_by": 1
+    }
+  },
+  "11": {
+    "class_type": "ImageResizeKJ",
+    "inputs": {
+      "image": ["7", 0],
+      "width": 1024,
+      "height": 1024,
+      "upscale_method": "lanczos",
+      "keep_proportion": false,
+      "divisible_by": 1
+    }
+  },
+  "12": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {
+      "destination": ["11", 0],
+      "source": ["10", 0],
+      "x": 256,
+      "y": 200,
+      "resize_source": false
+    }
+  },
+  "20": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["12", 0],
+      "filename_prefix": "feature_demo_composite"
+    }
+  },
+  "21": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": ["7", 0],
+      "filename_prefix": "feature_demo_bg"
+    }
+  },
+  "_meta": {
+    "name": "Feature Demo Scene Composite",
+    "ax_studio": {
+      "workflow_id": "feature-demo",
+      "input_nodes": {
+        "product_image": "1",
+        "scene_prompt": "3",
+        "negative_prompt": "4",
+        "seed": "6",
+        "product_position": "12"
+      },
+      "output_nodes": {
+        "composite": "20",
+        "background": "21"
+      }
+    }
+  }
+}

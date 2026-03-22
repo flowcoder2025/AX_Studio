@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ax-primary: #2563eb;
+    --ax-dark: #0a0a0a;
+    --ax-surface: #f8f7f4;
+    --ax-border: #e5e3de;
+  }
+
+  body {
+    font-family: 'Pretendard', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-ax-primary text-white rounded-lg text-sm font-medium
+           hover:bg-blue-700 transition-colors;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 border border-ax-border rounded-lg text-sm font-medium
+           hover:bg-gray-50 transition-colors;
+  }
+
+  .card {
+    @apply bg-white border border-ax-border rounded-xl p-5;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 border border-ax-border rounded-lg text-sm
+           focus:outline-none focus:ring-2 focus:ring-ax-primary/20 focus:border-ax-primary;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-blue {
+    @apply bg-blue-50 text-blue-700;
+  }
+
+  .badge-coral {
+    @apply bg-orange-50 text-orange-700;
+  }
+
+  .badge-green {
+    @apply bg-green-50 text-green-700;
+  }
+
+  .badge-amber {
+    @apply bg-amber-50 text-amber-700;
+  }
+
+  .badge-pink {
+    @apply bg-pink-50 text-pink-700;
+  }
+}

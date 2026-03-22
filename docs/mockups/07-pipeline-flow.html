@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — Pipeline Flow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;display:flex;justify-content:center;padding:24px}
+.wrap{background:#fff;border-radius:16px;padding:24px;border:1px solid #e5e3de;max-width:700px;width:100%}
+h1{font-size:18px;font-weight:600;text-align:center;margin-bottom:2px}
+.sub{font-size:12px;color:#888;text-align:center;margin-bottom:24px}
+.step{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.step-box{flex:1;border:1px solid #e5e3de;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.step-name{font-size:13px;font-weight:600}
+.step-note{font-size:11px;color:#888}
+.step-teal .step-num{background:#E1F5EE;color:#085041}
+.step-teal .step-box{background:#E1F5EE;border-color:#9FE1CB}
+.step-blue .step-num{background:#E6F1FB;color:#0C447C}
+.step-blue .step-box{background:#E6F1FB;border-color:#B5D4F4}
+.step-coral .step-num{background:#FAECE7;color:#712B13}
+.step-coral .step-box{background:#FAECE7;border-color:#F5C4B3}
+.step-amber .step-num{background:#FAEEDA;color:#633806}
+.step-amber .step-box{background:#FAEEDA;border-color:#FAC775}
+.step-purple .step-num{background:#EEEDFE;color:#3C3489}
+.step-purple .step-box{background:#EEEDFE;border-color:#AFA9EC}
+.step-pink .step-num{background:#FBEAF0;color:#72243E}
+.step-pink .step-box{background:#FBEAF0;border-color:#F4C0D1}
+.arrow{text-align:center;color:#ccc;font-size:14px;margin:4px 0 4px 14px}
+.parallel{border:1px dashed #ccc;border-radius:8px;padding:12px;margin:8px 0}
+.parallel-label{font-size:10px;color:#aaa;text-align:center;margin-bottom:8px;font-weight:600;letter-spacing:.5px}
+.parallel-row{display:flex;gap:8px}
+.parallel-box{flex:1;border:1px solid #e5e3de;border-radius:8px;padding:10px;text-align:center}
+.parallel-box.coral{background:#FAECE7;border-color:#F5C4B3}
+.parallel-box.amber{background:#FAEEDA;border-color:#FAC775}
+.p-title{font-size:12px;font-weight:600;margin-bottom:4px}
+.p-items{font-size:11px;color:#666;line-height:1.6;text-align:left}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Pipeline Flow — 단일 제품 처리 흐름</h1>
+  <p class="sub">8단계 순차 처리 · 이미지/영상은 병렬</p>
+
+  <div class="step step-teal">
+    <div class="step-num">1</div>
+    <div class="step-box"><span class="step-name">입력 수신 및 파싱</span><span class="step-note">Mode A/B/C 분기</span></div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="step step-blue">
+    <div class="step-num">2</div>
+    <div class="step-box"><span class="step-name">Claude 제품 분석</span><span class="step-note">이미지 인식 + 스펙 파싱</span></div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="step step-blue">
+    <div class="step-num">3</div>
+    <div class="step-box"><span class="step-name">Claude 블록 구성 추천</span><span class="step-note">카테고리 기반 최적 순서</span></div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="step step-blue">
+    <div class="step-num">4</div>
+    <div class="step-box"><span class="step-name">Claude 카피라이팅</span><span class="step-note">블록별 카피 일괄 생성</span></div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <!-- Parallel section -->
+  <div class="parallel">
+    <div class="parallel-label">PARALLEL — 이미지 + 영상 동시 생성</div>
+    <div class="parallel-row">
+      <div class="parallel-box coral">
+        <div class="p-title" style="color:#712B13">5a. 이미지 생성</div>
+        <div class="p-items">· 배경 제거 (RMBG)<br>· 라이프스타일 합성<br>· 제품 연출 이미지</div>
+        <div style="font-size:10px;color:#993C1D;margin-top:6px">ComfyUI</div>
+      </div>
+      <div class="parallel-box coral">
+        <div class="p-title" style="color:#712B13">5b. 영상 생성</div>
+        <div class="p-items">· 360° 회전<br>· 기능 시연 모션<br>· Before→After</div>
+        <div style="font-size:10px;color:#993C1D;margin-top:6px">ComfyUI + Kling</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <div class="step step-amber">
+    <div class="step-num">6</div>
+    <div class="step-box"><span class="step-name">FFmpeg 후처리</span><span class="step-note">텍스트 오버레이 / 자막 / 합성</span></div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="step step-purple">
+    <div class="step-num">7</div>
+    <div class="step-box"><span class="step-name">블록 조립</span><span class="step-note">카피 + 이미지 + 영상 합체</span></div>
+  </div>
+  <div class="arrow">↓</div>
+
+  <div class="step step-pink">
+    <div class="step-num">8</div>
+    <div class="step-box"><span class="step-name">Puppeteer 렌더링</span><span class="step-note">HTML → 긴 이미지 변환</span></div>
+  </div>
+</div>
+</body>
+</html>

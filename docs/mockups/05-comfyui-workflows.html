@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — ComfyUI Workflow Designs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;padding:24px;max-width:800px;margin:0 auto}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.subtitle{font-size:13px;color:#888;margin-bottom:20px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #e5e3de;background:#fff;color:#888;transition:all .15s}
+.tab.on{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC;font-weight:600}
+.panel{display:none}.panel.on{display:block}
+.flow{background:#fff;border-radius:12px;padding:18px;margin-bottom:12px;border:1px solid #e5e3de}
+.flow-title{font-size:16px;font-weight:600;margin-bottom:4px}
+.flow-sub{font-size:12px;color:#888;margin-bottom:14px;line-height:1.5}
+.nd{display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap}
+.nd-box{padding:6px 10px;border-radius:6px;font-size:11px;border:1px solid #e5e3de;background:#fff;flex-shrink:0}
+.nd-box.inp{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
+.nd-box.proc{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.nd-box.api{background:#FAECE7;color:#712B13;border-color:#F5C4B3}
+.nd-box.out{background:#E1F5EE;color:#085041;border-color:#9FE1CB}
+.nd-box.ffm{background:#FAEEDA;color:#633806;border-color:#FAC775}
+.arr-r{color:#ccc;font-size:13px;flex-shrink:0}
+.step-group{margin-bottom:12px}
+.step-label{font-size:10px;color:#aaa;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.detail{background:#fff;border:1px solid #e5e3de;border-radius:8px;padding:14px;margin-top:12px}
+.detail-h{font-size:13px;font-weight:600;margin-bottom:8px}
+.detail-row{display:flex;gap:8px;font-size:12px;padding:4px 0;border-bottom:0.5px solid #eee}
+.detail-row:last-child{border:none}
+.detail-k{color:#999;min-width:110px;flex-shrink:0}
+.note{font-size:12px;color:#888;margin-top:10px;padding:10px;background:#fafafa;border-radius:6px;line-height:1.5;border:1px solid #eee}
+.alt{margin-top:10px;padding:10px;border:1px dashed #ccc;border-radius:6px;font-size:12px;color:#888;line-height:1.5}
+.alt-h{font-size:12px;font-weight:600;color:#333;margin-bottom:4px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:11px;color:#888}
+.legend span{display:flex;align-items:center;gap:4px}
+.ldot{width:10px;height:10px;border-radius:3px}
+</style>
+</head>
+<body>
+<h1>ComfyUI Workflow Designs</h1>
+<p class="subtitle">4가지 영상 타입 × 7개 워크플로우 JSON · 탭을 클릭해서 상세 확인</p>
+
+<div class="legend">
+  <span><span class="ldot" style="background:#B5D4F4"></span> Input</span>
+  <span><span class="ldot" style="background:#CECBF6"></span> ComfyUI node</span>
+  <span><span class="ldot" style="background:#F5C4B3"></span> External API</span>
+  <span><span class="ldot" style="background:#9FE1CB"></span> Output</span>
+  <span><span class="ldot" style="background:#FAC775"></span> FFmpeg</span>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="show(0)">1. 360° Rotation</div>
+  <div class="tab" onclick="show(1)">2. Feature Demo</div>
+  <div class="tab" onclick="show(2)">3. Before→After</div>
+  <div class="tab" onclick="show(3)">4. Text Shortform</div>
+</div>
+
+<div class="panel on" id="p0">
+  <div class="flow">
+    <div class="flow-title">360° Product Rotation</div>
+    <div class="flow-sub">제품 이미지 1장 → 다각도 뷰 → 프레임 보간 → 회전 영상</div>
+    <div class="step-group"><div class="step-label">Stage 1 — Image Input</div><div class="nd"><div class="nd-box inp">Load image</div><span class="arr-r">→</span><div class="nd-box proc">RMBG 2.0</div><span class="arr-r">→</span><div class="nd-box proc">Product cutout</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 2 — Multi-view</div><div class="nd"><div class="nd-box proc">Zero123++ v2</div><span class="arr-r">→</span><div class="nd-box proc">6-view output</div></div><div class="nd"><div class="nd-box proc">ControlNet depth</div><span class="arr-r">→</span><div class="nd-box proc">Consistent views</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 3 — Interpolation</div><div class="nd"><div class="nd-box proc">FILM / RIFE</div><span class="arr-r">→</span><div class="nd-box proc">24~36 frames</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 4 — Output</div><div class="nd"><div class="nd-box ffm">FFmpeg encode</div><span class="arr-r">→</span><div class="nd-box out">MP4 / GIF</div></div></div>
+  </div>
+  <div class="detail"><div class="detail-h">Node Config</div><div class="detail-row"><span class="detail-k">Background removal</span><span>BRIA RMBG 2.0</span></div><div class="detail-row"><span class="detail-k">Multi-view model</span><span>Zero123++ v2 (6-view)</span></div><div class="detail-row"><span class="detail-k">View consistency</span><span>ControlNet depth + IP-Adapter</span></div><div class="detail-row"><span class="detail-k">Interpolation</span><span>FILM or RIFE (24fps)</span></div><div class="detail-row"><span class="detail-k">Resolution</span><span>512→upscale 1024</span></div></div>
+  <div class="alt"><div class="alt-h">Alt: Kling API path</div>Product cutout → Kling image-to-video (turntable prompt) → MP4. Higher quality but API cost.</div>
+  <div class="note">T2I path: Claude prompt → SDXL/Flux → base image → same pipeline from Stage 1.</div>
+</div>
+
+<div class="panel" id="p1">
+  <div class="flow">
+    <div class="flow-title">Feature Demo Motion</div>
+    <div class="flow-sub">제품 이미지 + 기능 설명 → 시연 모션 영상</div>
+    <div class="step-group"><div class="step-label">Stage 1 — Scene Composition</div><div class="nd"><div class="nd-box inp">Product image</div><span class="arr-r">→</span><div class="nd-box proc">RMBG 2.0</div></div><div class="nd"><div class="nd-box inp">Claude prompt</div><span class="arr-r">→</span><div class="nd-box proc">SDXL / Flux</div><span class="arr-r">→</span><div class="nd-box proc">Scene BG</div></div><div class="nd"><div class="nd-box proc">Layer composite</div><span class="arr-r">→</span><div class="nd-box proc">Product + scene</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 2 — Motion</div><div class="nd"><div class="nd-box proc">Composite</div><span class="arr-r">→</span><div class="nd-box api">Kling API</div><span class="arr-r">→</span><div class="nd-box proc">Motion clip (4s)</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 3 — Post</div><div class="nd"><div class="nd-box ffm">FFmpeg</div><span class="arr-r">→</span><div class="nd-box ffm">Text overlay</div><span class="arr-r">→</span><div class="nd-box ffm">Transition</div><span class="arr-r">→</span><div class="nd-box out">MP4</div></div></div>
+  </div>
+  <div class="detail"><div class="detail-h">Node Config</div><div class="detail-row"><span class="detail-k">Scene generation</span><span>SDXL / Flux (lifestyle)</span></div><div class="detail-row"><span class="detail-k">Motion model</span><span>Kling 1.6 image-to-video</span></div><div class="detail-row"><span class="detail-k">Motion prompt</span><span>Claude per-feature action</span></div><div class="detail-row"><span class="detail-k">Text overlay</span><span>FFmpeg drawtext (Pretendard)</span></div><div class="detail-row"><span class="detail-k">Duration</span><span>4~8s per feature clip</span></div></div>
+  <div class="alt"><div class="alt-h">Alt: SVD path</div>Composite → SVD XT (25 frames) → FFmpeg. Fully local, no API cost.</div>
+</div>
+
+<div class="panel" id="p2">
+  <div class="flow">
+    <div class="flow-title">Before → After</div>
+    <div class="flow-sub">사용 전후 이미지 쌍 생성 → 트랜지션 영상</div>
+    <div class="step-group"><div class="step-label">Stage 1 — Image Pair</div><div class="nd"><div class="nd-box inp">Claude prompt</div><span class="arr-r">→</span><div class="nd-box proc">SDXL / Flux</div><span class="arr-r">→</span><div class="nd-box proc">Before image</div></div><div class="nd"><div class="nd-box proc">IP-Adapter (0.7)</div><span class="arr-r">+</span><div class="nd-box proc">After prompt</div><span class="arr-r">→</span><div class="nd-box proc">After image</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 2 — Transition</div><div class="nd"><div class="nd-box proc">Before + After</div><span class="arr-r">→</span><div class="nd-box api">Kling API</div><span class="arr-r">→</span><div class="nd-box proc">Morph clip</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 3 — Assembly</div><div class="nd"><div class="nd-box ffm">FFmpeg</div><span class="arr-r">→</span><div class="nd-box ffm">"BEFORE"</div><span class="arr-r">→</span><div class="nd-box ffm">Transition</div><span class="arr-r">→</span><div class="nd-box ffm">"AFTER"</div><span class="arr-r">→</span><div class="nd-box out">MP4</div></div></div>
+  </div>
+  <div class="detail"><div class="detail-h">Node Config</div><div class="detail-row"><span class="detail-k">Before generation</span><span>SDXL (problem-state prompt)</span></div><div class="detail-row"><span class="detail-k">After generation</span><span>Same seed + IP-Adapter 0.6~0.8</span></div><div class="detail-row"><span class="detail-k">Transition</span><span>Kling morph or FILM interp</span></div><div class="detail-row"><span class="detail-k">Labels</span><span>FFmpeg drawtext fade-in</span></div><div class="detail-row"><span class="detail-k">Duration</span><span>2s hold + 2s transition + 2s = 6s</span></div></div>
+  <div class="note">Category-specific: beauty (skin), living goods (fabric), appliance (dirt), food (health)</div>
+</div>
+
+<div class="panel" id="p3">
+  <div class="flow">
+    <div class="flow-title">Text + Motion Graphics Shortform</div>
+    <div class="flow-sub">Claude 카피 + KPI → 모션 타이포그래피 숏폼</div>
+    <div class="step-group"><div class="step-label">Stage 1 — Content</div><div class="nd"><div class="nd-box inp">Claude output</div><span class="arr-r">→</span><div class="nd-box proc">JSON script</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 2 — Background</div><div class="nd"><div class="nd-box proc">SDXL / Flux</div><span class="arr-r">→</span><div class="nd-box proc">Abstract BG</div></div><div class="nd"><div class="nd-box proc">Product cutout</div><span class="arr-r">→</span><div class="nd-box proc">Overlay</div></div></div>
+    <div class="step-group"><div class="step-label">Stage 3 — Motion</div><div class="nd"><div class="nd-box ffm">FFmpeg</div><span class="arr-r">→</span><div class="nd-box ffm">Text anim</div><span class="arr-r">→</span><div class="nd-box ffm">KPI counter</div><span class="arr-r">→</span><div class="nd-box ffm">Concat</div><span class="arr-r">→</span><div class="nd-box out">MP4</div></div></div>
+  </div>
+  <div class="detail"><div class="detail-h">Node Config</div><div class="detail-row"><span class="detail-k">Script format</span><span>JSON [{scene, text, duration, kpi}]</span></div><div class="detail-row"><span class="detail-k">Background</span><span>SDXL abstract or solid color</span></div><div class="detail-row"><span class="detail-k">Text rendering</span><span>FFmpeg drawtext + fade/slide</span></div><div class="detail-row"><span class="detail-k">KPI animation</span><span>FFmpeg count-up expression</span></div><div class="detail-row"><span class="detail-k">Font</span><span>Pretendard / SUIT</span></div><div class="detail-row"><span class="detail-k">Duration</span><span>15~30s (3~5s/scene)</span></div><div class="detail-row"><span class="detail-k">Aspect</span><span>9:16 (vertical) or 1:1</span></div></div>
+  <div class="alt"><div class="alt-h">Alt: Remotion path</div>JSON → Remotion (React video) → MP4. Higher quality motion graphics.</div>
+  <div class="note">Most FFmpeg-heavy workflow. ComfyUI only generates BG frames + cutout. Core motion is all FFmpeg filter_complex.</div>
+</div>
+
+<script>
+function show(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',j===i));document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('on',j===i));}
+</script>
+</body>
+</html>

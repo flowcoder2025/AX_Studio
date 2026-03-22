@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — Block Layout System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;display:flex;justify-content:center;padding:24px}
+.wrap{max-width:700px;width:100%}
+h1{font-size:18px;font-weight:600;text-align:center;margin-bottom:2px}
+.sub{font-size:12px;color:#888;text-align:center;margin-bottom:20px}
+.layout{display:flex;gap:16px}
+.sidebar{width:80px;flex-shrink:0}
+.sidebar-item{font-size:10px;color:#888;text-align:right;padding:4px 0;height:46px;display:flex;align-items:center;justify-content:flex-end}
+.sidebar-item.src-claude{color:#0C447C}
+.sidebar-item.src-comfy{color:#712B13}
+.sidebar-item.src-ffmpeg{color:#633806}
+.page-frame{flex:1;max-width:380px;background:#fff;border-radius:16px;border:1px solid #e5e3de;overflow:hidden}
+.block-row{padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:0.5px solid #f0f0f0;position:relative;min-height:46px}
+.block-row:last-child{border:none}
+.block-label{font-size:12px;font-weight:600;flex:1}
+.block-desc{font-size:10px;color:#999}
+.block-src{font-size:9px;padding:2px 6px;border-radius:4px;flex-shrink:0}
+.src-c{background:#E6F1FB;color:#0C447C}
+.src-cf{background:#FAECE7;color:#712B13}
+.src-ff{background:#FAEEDA;color:#633806}
+.block-row.dark{background:#1a1a1a}
+.block-row.dark .block-label{color:#fff}
+.block-row.dark .block-desc{color:#666}
+.block-row.gray{background:#f8f7f4}
+.block-row.video{border-left:3px solid #FAC775}
+.anno{width:80px;flex-shrink:0}
+.anno-item{font-size:10px;color:#999;padding:4px 0;height:46px;display:flex;align-items:center}
+.legend{display:flex;gap:12px;justify-content:center;margin-bottom:16px;font-size:11px;color:#888}
+.legend span{display:flex;align-items:center;gap:4px}
+.ldot{width:8px;height:8px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Block Layout System</h1>
+  <p class="sub">상세페이지 블록 구성 · 좌: 데이터 소스 / 우: 출력 형태</p>
+  <div class="legend">
+    <span><span class="ldot" style="background:#B5D4F4"></span> Claude</span>
+    <span><span class="ldot" style="background:#F5C4B3"></span> ComfyUI</span>
+    <span><span class="ldot" style="background:#FAC775"></span> FFmpeg</span>
+    <span><span class="ldot" style="background:#F4C0D1"></span> Puppeteer</span>
+  </div>
+
+  <div class="layout">
+    <!-- Left annotations: source -->
+    <div class="sidebar">
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-comfy">ComfyUI</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-comfy">ComfyUI</div>
+      <div class="sidebar-item src-comfy">ComfyUI+Kling</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-claude">Claude</div>
+      <div class="sidebar-item src-ffmpeg">FFmpeg</div>
+      <div class="sidebar-item src-claude">Claude</div>
+    </div>
+
+    <!-- Page mockup -->
+    <div class="page-frame">
+      <div class="block-row dark">
+        <div><div class="block-label">hero</div><div class="block-desc">메인 비주얼 + 헤드카피 + KPI</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row video">
+        <div><div class="block-label">video — 360° 회전</div><div class="block-desc">자동 생성 영상</div></div>
+        <span class="block-src src-cf">ComfyUI</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">painpoint</div><div class="block-desc">이런 고민 있으시죠?</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row gray">
+        <div><div class="block-label">solution</div><div class="block-desc">이래서 다릅니다</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">feature</div><div class="block-desc">핵심 기능 (이미지+텍스트)</div></div>
+        <span class="block-src src-cf">ComfyUI</span>
+      </div>
+      <div class="block-row video">
+        <div><div class="block-label">video — before→after</div><div class="block-desc">변화 영상 (자동 생성)</div></div>
+        <span class="block-src src-cf">ComfyUI</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">ingredient / tech</div><div class="block-desc">핵심 성분 or 기술</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row gray">
+        <div><div class="block-label">trust</div><div class="block-desc">만족도 98% / 별점 4.9</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">review</div><div class="block-desc">실사용 후기 카드</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">spec</div><div class="block-desc">제품 사양 테이블</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">faq</div><div class="block-desc">자주 묻는 질문</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row">
+        <div><div class="block-label">howto</div><div class="block-desc">사용 방법 스텝</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+      <div class="block-row video">
+        <div><div class="block-label">video — 텍스트 숏폼</div><div class="block-desc">모션그래픽 (자동 생성)</div></div>
+        <span class="block-src src-ff">FFmpeg</span>
+      </div>
+      <div class="block-row gray">
+        <div><div class="block-label">cta</div><div class="block-desc">패키지 구성 + 구매</div></div>
+        <span class="block-src src-c">Claude</span>
+      </div>
+    </div>
+
+    <!-- Right annotations: output type -->
+    <div class="anno">
+      <div class="anno-item">이미지+영상</div>
+      <div class="anno-item">영상</div>
+      <div class="anno-item">텍스트+아이콘</div>
+      <div class="anno-item">텍스트+아이콘</div>
+      <div class="anno-item">이미지+텍스트</div>
+      <div class="anno-item">영상</div>
+      <div class="anno-item">이미지+텍스트</div>
+      <div class="anno-item">숫자</div>
+      <div class="anno-item">카드</div>
+      <div class="anno-item">테이블</div>
+      <div class="anno-item">아코디언</div>
+      <div class="anno-item">스텝</div>
+      <div class="anno-item">영상</div>
+      <div class="anno-item">버튼+가격</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

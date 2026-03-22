@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — Electronics Template Mockup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;display:flex;justify-content:center;padding:20px 0}
+.page{max-width:420px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,.08)}
+.bl{position:relative}
+.bl-label{position:absolute;top:8px;right:8px;font-size:10px;padding:2px 7px;border-radius:4px;z-index:2}
+.lc{background:#E6F1FB;color:#0C447C}.lcf{background:#FAECE7;color:#712B13}.lff{background:#FAEEDA;color:#633806}
+.ph{border:1.5px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;color:#bbb;font-size:12px;background:#fafafa}
+.sdk{background:#0a0a0a;color:#f0f0f0;padding:32px 24px}
+.sl{background:#fff;padding:24px}.sg{background:#f8f7f4;padding:24px}
+.h1{font-size:20px;font-weight:600;line-height:1.3}.h2{font-size:16px;font-weight:600;margin-bottom:6px}.h3{font-size:13px;font-weight:600}
+.sub{font-size:12px;color:#888;line-height:1.6;margin-top:6px}.dv{height:0.5px;background:#e5e3de}
+.kpi{display:flex;justify-content:center;gap:14px;margin-top:14px}
+.kpi-n{font-size:20px;font-weight:600}.kpi-l{font-size:10px;margin-top:2px;color:#999}
+.stars{color:#EF9F27;font-size:13px}
+.rc{background:#f8f7f4;border-radius:8px;padding:12px;margin-top:8px}
+.rc-txt{font-size:12px;line-height:1.5;color:#666}.rc-au{font-size:11px;color:#aaa;margin-top:4px}
+.spec-r{display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid #eee;font-size:12px}.spec-k{color:#999}
+.faq-i{padding:10px 0;border-bottom:0.5px solid #eee}.faq-q{font-size:12px;font-weight:600}.faq-a{font-size:11px;color:#888;margin-top:4px;line-height:1.5}
+.cta-btn{width:100%;padding:13px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px}
+.cmp-tbl{width:100%;font-size:11px;border-collapse:collapse;margin-top:10px}
+.cmp-tbl th,.cmp-tbl td{padding:8px 4px;text-align:center;border-bottom:0.5px solid #eee}
+.cmp-tbl th{font-weight:500;font-size:10px;color:#999}
+.cmp-ours{background:#e8f0fe;color:#2563eb;font-weight:600}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.feat-card{background:#f8f7f4;border-radius:8px;padding:12px}
+.compat{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.compat-chip{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid #ddd;background:#fff}
+.compat-chip.yes{background:#eaf3de;color:#27500a;border-color:#c0dd97}
+.unbox{display:flex;gap:6px;margin-top:10px}
+.unbox-item{flex:1;text-align:center}
+.unbox-ph{height:70px;border:1px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#bbb;background:#fafafa;margin-bottom:4px}
+.unbox-label{font-size:10px;color:#888}
+.pkg{display:flex;gap:8px;margin-top:10px}
+.pkg-card{flex:1;border:1px solid #eee;border-radius:8px;padding:10px;text-align:center}
+.pkg-card.ft{border:2px solid #2563eb}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="bl sdk" style="text-align:center">
+    <span class="bl-label lc">Claude</span>
+    <p style="font-size:11px;opacity:.4;letter-spacing:1px;margin-bottom:8px">NEXT-GEN AUDIO</p>
+    <p class="h1" style="color:#fff">소리에 집중하는 순간<br>ANC Pro 무선 이어폰</p>
+    <div class="kpi">
+      <div style="text-align:center"><div class="kpi-n" style="color:#60a5fa">-45dB</div><div class="kpi-l" style="color:#777">노이즈 캔슬링</div></div>
+      <div style="text-align:center"><div class="kpi-n" style="color:#60a5fa">36h</div><div class="kpi-l" style="color:#777">총 재생시간</div></div>
+      <div style="text-align:center"><div class="kpi-n" style="color:#60a5fa">LDAC</div><div class="kpi-l" style="color:#777">하이레스 코덱</div></div>
+    </div>
+    <div class="ph" style="height:220px;margin-top:18px;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4)">
+      <span>제품 hero 이미지</span><span style="font-size:11px">ComfyUI</span>
+    </div>
+  </div>
+
+  <div class="bl sl" style="text-align:center">
+    <span class="bl-label lcf">ComfyUI + Kling</span>
+    <p class="h3" style="color:#aaa">video — 360° product</p>
+    <div class="ph" style="height:170px;margin-top:8px"><span>360° 제품 회전 영상</span></div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sl">
+    <span class="bl-label lcf">ComfyUI</span>
+    <p class="h2">핵심 기능</p>
+    <div class="feat-grid">
+      <div class="feat-card"><div class="ph" style="height:80px;margin-bottom:8px"><span style="font-size:10px">ANC</span></div><p class="h3">-45dB ANC</p><p class="sub" style="margin-top:2px;font-size:11px">어댑티브 노이즈 캔슬링</p></div>
+      <div class="feat-card"><div class="ph" style="height:80px;margin-bottom:8px"><span style="font-size:10px">Driver</span></div><p class="h3">11mm 드라이버</p><p class="sub" style="margin-top:2px;font-size:11px">커스텀 다이내믹</p></div>
+      <div class="feat-card"><div class="ph" style="height:80px;margin-bottom:8px"><span style="font-size:10px">Battery</span></div><p class="h3">36시간 재생</p><p class="sub" style="margin-top:2px;font-size:11px">이어폰 8h + 케이스 28h</p></div>
+      <div class="feat-card"><div class="ph" style="height:80px;margin-bottom:8px"><span style="font-size:10px">Water</span></div><p class="h3">IPX5 방수</p><p class="sub" style="margin-top:2px;font-size:11px">운동 중 사용 가능</p></div>
+    </div>
+  </div>
+
+  <div class="bl sl" style="text-align:center">
+    <span class="bl-label lcf">ComfyUI + Kling</span>
+    <p class="h3" style="color:#aaa">video — feature demo</p>
+    <div class="ph" style="height:170px;margin-top:8px"><span>ANC 기능 시연 모션</span></div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sg">
+    <span class="bl-label lc">Claude</span>
+    <p class="h2">경쟁사 스펙 비교</p>
+    <table class="cmp-tbl">
+      <tr><th></th><th class="cmp-ours" style="border-radius:4px 4px 0 0">ANC Pro</th><th>A사</th><th>B사</th></tr>
+      <tr><td class="spec-k">ANC</td><td class="cmp-ours">-45dB</td><td>-38dB</td><td>-40dB</td></tr>
+      <tr><td class="spec-k">재생</td><td class="cmp-ours">36h</td><td>30h</td><td>28h</td></tr>
+      <tr><td class="spec-k">코덱</td><td class="cmp-ours">LDAC</td><td>AAC</td><td>aptX</td></tr>
+      <tr><td class="spec-k">드라이버</td><td class="cmp-ours">11mm</td><td>10mm</td><td>10mm</td></tr>
+      <tr><td class="spec-k">방수</td><td class="cmp-ours">IPX5</td><td>IPX4</td><td>IPX4</td></tr>
+      <tr><td class="spec-k">가격</td><td class="cmp-ours">149,000</td><td>199,000</td><td>179,000</td></tr>
+    </table>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sl">
+    <span class="bl-label lc">Claude</span>
+    <p class="h2">호환 기기</p>
+    <div class="compat">
+      <span class="compat-chip yes">iPhone 14+</span><span class="compat-chip yes">Galaxy S23+</span>
+      <span class="compat-chip yes">iPad Pro</span><span class="compat-chip yes">MacBook</span>
+      <span class="compat-chip yes">Windows PC</span><span class="compat-chip yes">Switch</span>
+      <span class="compat-chip yes">PS5</span><span class="compat-chip">Xbox (미지원)</span>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-top:8px">Bluetooth 5.3 / 멀티포인트 2대 동시 연결</p>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sg" style="text-align:center">
+    <span class="bl-label lc">Claude</span>
+    <div class="kpi"><div style="text-align:center"><div class="kpi-n">8만+</div><div class="kpi-l">누적 판매</div></div><div style="text-align:center"><div class="kpi-n">4.9</div><div class="kpi-l">별점</div></div><div style="text-align:center"><div class="kpi-n">97%</div><div class="kpi-l">만족도</div></div></div>
+  </div>
+
+  <div class="bl sl">
+    <span class="bl-label lc">Claude</span>
+    <p class="h2">사용자 후기</p>
+    <div class="rc"><div class="stars">★★★★★</div><p class="rc-txt" style="margin-top:4px">"에어팟 프로 쓰다가 넘어왔는데 노캔 성능이 확실히 좋습니다."</p><p class="rc-au">김** · IT 블로거</p></div>
+    <div class="rc"><div class="stars">★★★★★</div><p class="rc-txt" style="margin-top:4px">"지하철에서 완벽한 노이즈 캔슬링. 배터리도 일주일에 한 번 충전."</p><p class="rc-au">박** · 직장인</p></div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sl">
+    <span class="bl-label lc">Claude</span>
+    <p class="h2">상세 스펙</p>
+    <div style="margin-top:8px">
+      <div class="spec-r"><span class="spec-k">드라이버</span><span>11mm dynamic</span></div>
+      <div class="spec-r"><span class="spec-k">주파수</span><span>20Hz - 40kHz</span></div>
+      <div class="spec-r"><span class="spec-k">ANC</span><span>-45dB (adaptive)</span></div>
+      <div class="spec-r"><span class="spec-k">코덱</span><span>LDAC / AAC / SBC</span></div>
+      <div class="spec-r"><span class="spec-k">블루투스</span><span>5.3 / 멀티포인트</span></div>
+      <div class="spec-r"><span class="spec-k">배터리</span><span>이어폰 8h / 케이스 28h</span></div>
+      <div class="spec-r"><span class="spec-k">충전</span><span>USB-C / Qi 무선충전</span></div>
+      <div class="spec-r" style="border:none"><span class="spec-k">무게</span><span>5.2g / 48g</span></div>
+    </div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sl">
+    <span class="bl-label lcf">ComfyUI</span>
+    <p class="h2">구성품</p>
+    <div class="unbox">
+      <div class="unbox-item"><div class="unbox-ph">img</div><div class="unbox-label">이어폰</div></div>
+      <div class="unbox-item"><div class="unbox-ph">img</div><div class="unbox-label">충전 케이스</div></div>
+      <div class="unbox-item"><div class="unbox-ph">img</div><div class="unbox-label">이어팁 3종</div></div>
+      <div class="unbox-item"><div class="unbox-ph">img</div><div class="unbox-label">USB-C</div></div>
+    </div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sl">
+    <span class="bl-label lc">Claude</span>
+    <p class="h2">자주 묻는 질문</p>
+    <div class="faq-i"><p class="faq-q">통화 품질은 어떤가요?</p><p class="faq-a">3마이크 빔포밍으로 선명한 통화가 가능합니다.</p></div>
+    <div class="faq-i"><p class="faq-q">LDAC은 아이폰에서도 되나요?</p><p class="faq-a">안드로이드 전용입니다. 아이폰은 AAC로 연결됩니다.</p></div>
+    <div class="faq-i" style="border:none"><p class="faq-q">멀티포인트 연결 방법은?</p><p class="faq-a">전용 앱에서 활성화하면 2대 동시 연결됩니다.</p></div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sl" style="text-align:center">
+    <span class="bl-label lff">FFmpeg</span>
+    <p class="h3" style="color:#aaa">video — spec shortform</p>
+    <div class="ph" style="height:160px;margin-top:8px"><span>스펙 비교 모션그래픽 숏폼</span></div>
+  </div>
+  <div class="dv"></div>
+
+  <div class="bl sg">
+    <span class="bl-label lc">Claude</span>
+    <p class="h2" style="text-align:center">패키지 선택</p>
+    <div class="pkg">
+      <div class="pkg-card"><p style="font-size:12px;font-weight:600">단품</p><p style="font-size:17px;font-weight:600;margin-top:4px">149,000원</p><p style="font-size:10px;color:#999;margin-top:4px">이어폰 + 케이스</p></div>
+      <div class="pkg-card ft"><div style="font-size:10px;color:#2563eb;font-weight:600;margin-bottom:2px">BEST</div><p style="font-size:12px;font-weight:600">풀패키지</p><p style="font-size:17px;font-weight:600;margin-top:4px">179,000원</p><p style="font-size:10px;color:#999;margin-top:4px">+ 폼팁 + 파우치</p></div>
+    </div>
+    <button class="cta-btn">구매하기</button>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — Grooming Template Mockup</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;display:flex;justify-content:center;padding:20px 0}
+.page{max-width:420px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,.08)}
+.block{position:relative}
+.block-label{position:absolute;top:8px;right:8px;font-size:10px;padding:2px 7px;border-radius:4px;z-index:2}
+.lc{background:#E6F1FB;color:#0C447C}
+.lcf{background:#FAECE7;color:#712B13}
+.lff{background:#FAEEDA;color:#633806}
+.ph{border:1.5px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;color:#bbb;font-size:12px;background:#fafafa}
+.ph svg{width:24px;height:24px;opacity:.35}
+.sd{background:#0a0a0a;color:#f5f5f5;padding:32px 24px}
+.sl{background:#fff;padding:24px}
+.sg{background:#f8f7f4;padding:24px}
+.h1{font-size:20px;font-weight:600;line-height:1.3}
+.h2{font-size:16px;font-weight:600;margin-bottom:6px}
+.h3{font-size:13px;font-weight:600}
+.sub{font-size:12px;color:#888;line-height:1.6;margin-top:6px}
+.dv{height:0.5px;background:#e5e3de}
+.kpi{display:flex;justify-content:center;gap:16px;margin-top:14px}
+.kpi-n{font-size:18px;font-weight:600}
+.kpi-l{font-size:10px;margin-top:2px;opacity:.6}
+.icon-row{display:flex;justify-content:space-around;margin-top:16px;gap:8px}
+.icon-item{text-align:center;flex:1}
+.icon-box{width:44px;height:44px;border-radius:50%;background:#f0f0f0;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#888}
+.icon-text{font-size:10px;color:#888}
+.stars{color:#EF9F27;font-size:13px}
+.rc{background:#f8f7f4;border-radius:8px;padding:12px;margin-top:8px}
+.rc-txt{font-size:12px;line-height:1.5;color:#666}
+.rc-au{font-size:11px;color:#aaa;margin-top:4px}
+.spec-r{display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid #eee;font-size:12px}
+.spec-k{color:#999}
+.faq-i{padding:10px 0;border-bottom:0.5px solid #eee}
+.faq-q{font-size:12px;font-weight:600}
+.faq-a{font-size:11px;color:#888;margin-top:4px;line-height:1.5}
+.cta-btn{width:100%;padding:13px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px}
+.step-row{display:flex;gap:10px;margin-top:12px}
+.step-num{width:26px;height:26px;border-radius:50%;background:#e8f0fe;color:#2563eb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.step-text{font-size:12px;line-height:1.5;color:#888}
+.pkg{display:flex;gap:8px;margin-top:12px}
+.pkg-card{flex:1;border:1px solid #eee;border-radius:8px;padding:10px;text-align:center}
+.pkg-card.ft{border:2px solid #2563eb}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="block sd" style="padding-top:20px">
+    <span class="block-label lc">Claude</span>
+    <p style="font-size:11px;opacity:.5;margin-bottom:4px">당신의 피부를 위한</p>
+    <p class="h1" style="color:#fff">프로 헨소닉<br>친절한 선택</p>
+    <div class="kpi">
+      <div style="text-align:center"><div class="kpi-n" style="color:#60a5fa">14,000RPM</div><div class="kpi-l">모터 회전수</div></div>
+      <div style="text-align:center"><div class="kpi-n" style="color:#60a5fa">IPX7 방수</div><div class="kpi-l">완전 방수</div></div>
+      <div style="text-align:center"><div class="kpi-n" style="color:#60a5fa">60분</div><div class="kpi-l">사용 시간</div></div>
+    </div>
+    <div class="ph" style="height:220px;margin-top:20px;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <span>hero image</span>
+      <span style="font-size:11px">ComfyUI — 제품 이미지 or T2I</span>
+    </div>
+  </div>
+
+  <div class="block sl" style="text-align:center">
+    <span class="block-label lcf">ComfyUI + Kling</span>
+    <p class="h3" style="color:#aaa">video block — 360° rotation</p>
+    <div class="ph" style="height:200px;margin-top:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>360° 제품 회전 영상</span>
+      <span style="font-size:11px">ComfyUI → Kling API → FFmpeg</span>
+    </div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sl">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">이런 고민 있으시죠?</p>
+    <div class="sub">
+      <p style="margin-top:10px">· 면도할 때 피부가 당기고 따가운 느낌</p>
+      <p style="margin-top:8px">· 얼굴 굴곡을 따라 밀착되지 않는 면도기</p>
+      <p style="margin-top:8px">· 충전이 금방 닳아서 불편한 경험</p>
+    </div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sg">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">이래서 다릅니다</p>
+    <div class="icon-row">
+      <div class="icon-item"><div class="icon-box">6D</div><div class="icon-text">6D 자유 회전</div></div>
+      <div class="icon-item"><div class="icon-box">IPX7</div><div class="icon-text">완전 방수</div></div>
+      <div class="icon-item"><div class="icon-box">60m</div><div class="icon-text">장시간 사용</div></div>
+      <div class="icon-item"><div class="icon-box">LED</div><div class="icon-text">잔량 표시</div></div>
+    </div>
+  </div>
+
+  <div class="block sl">
+    <span class="block-label lcf">ComfyUI</span>
+    <p class="h2">핵심 기능</p>
+    <p class="sub">얼굴 굴곡을 따라 빈틈없이, 부드럽게</p>
+    <div class="ph" style="height:180px;margin-top:14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      <span>기능 설명 이미지</span>
+      <span style="font-size:11px">제품 이미지 업로드 or T2I 생성</span>
+    </div>
+  </div>
+
+  <div class="block sl" style="text-align:center">
+    <span class="block-label lcf">ComfyUI + FFmpeg</span>
+    <p class="h3" style="color:#aaa">video block — feature demo</p>
+    <div class="ph" style="height:180px;margin-top:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>기능 시연 모션</span>
+      <span style="font-size:11px">ComfyUI + Kling API → FFmpeg 합성</span>
+    </div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sl">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">핵심 기술</p>
+    <p class="sub">일본산 스테인리스 3중 블레이드 시스템</p>
+    <div class="ph" style="height:140px;margin-top:14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+      <span>기술 설명 이미지</span>
+    </div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sg" style="text-align:center">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">만족도가 다릅니다</p>
+    <div class="kpi" style="margin-top:14px">
+      <div style="text-align:center"><div class="kpi-n">10만+</div><div class="kpi-l">누적 판매</div></div>
+      <div style="text-align:center"><div class="kpi-n">4.8</div><div class="kpi-l">평균 별점</div></div>
+      <div style="text-align:center"><div class="kpi-n">98%</div><div class="kpi-l">만족도</div></div>
+    </div>
+  </div>
+
+  <div class="block sl">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">실사용 후기</p>
+    <div class="rc"><div class="stars">★★★★★</div><p class="rc-txt" style="margin-top:4px">"밀착력이 다른 제품과 비교할 수 없을 정도입니다. 피부가 예민한 편인데 전혀 자극 없이 깔끔하게 면도됩니다."</p><p class="rc-au">김** · 30대 · 구매 인증</p></div>
+    <div class="rc"><div class="stars">★★★★★</div><p class="rc-txt" style="margin-top:4px">"충전 한 번으로 한 달 넘게 쓰고 있습니다. 방수라 욕실에서도 편하게 사용합니다."</p><p class="rc-au">박** · 40대 · 구매 인증</p></div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sl">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">제품 사양</p>
+    <div style="margin-top:8px">
+      <div class="spec-r"><span class="spec-k">모델명</span><span>PRO-HS6000</span></div>
+      <div class="spec-r"><span class="spec-k">모터</span><span>14,000 RPM</span></div>
+      <div class="spec-r"><span class="spec-k">방수등급</span><span>IPX7</span></div>
+      <div class="spec-r"><span class="spec-k">배터리</span><span>리튬이온 800mAh</span></div>
+      <div class="spec-r"><span class="spec-k">사용시간</span><span>60분 (완충 기준)</span></div>
+      <div class="spec-r"><span class="spec-k">충전시간</span><span>1.5시간 (USB-C)</span></div>
+      <div class="spec-r" style="border:none"><span class="spec-k">무게</span><span>178g</span></div>
+    </div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sl">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">자주 묻는 질문</p>
+    <div class="faq-i"><p class="faq-q">면도기 물 세척이 가능한가요?</p><p class="faq-a">네, IPX7 등급 완전 방수로 흐르는 물에 직접 세척이 가능합니다.</p></div>
+    <div class="faq-i"><p class="faq-q">교체 날은 어디서 구매하나요?</p><p class="faq-a">공식 스토어에서 교체 날을 구매하실 수 있으며, 교체 주기는 약 6개월입니다.</p></div>
+    <div class="faq-i" style="border:none"><p class="faq-q">해외에서도 충전이 되나요?</p><p class="faq-a">USB-C 충전 방식으로 100-240V 프리볼트를 지원합니다.</p></div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sl">
+    <span class="block-label lc">Claude</span>
+    <p class="h2">사용 방법</p>
+    <div class="step-row"><div class="step-num">1</div><div><p class="h3">전원 버튼을 눌러 작동</p><p class="step-text">하단 전원 버튼을 1초간 누르면 자동 작동됩니다.</p></div></div>
+    <div class="step-row"><div class="step-num">2</div><div><p class="h3">피부에 가볍게 밀착</p><p class="step-text">6D 회전 헤드가 얼굴 굴곡에 자동 밀착됩니다.</p></div></div>
+    <div class="step-row"><div class="step-num">3</div><div><p class="h3">사용 후 물 세척</p><p class="step-text">헤드를 분리하지 않고 흐르는 물에 바로 세척하세요.</p></div></div>
+  </div>
+
+  <div class="block sl" style="text-align:center">
+    <span class="block-label lff">FFmpeg</span>
+    <p class="h3" style="color:#aaa">video block — 텍스트 숏폼</p>
+    <div class="ph" style="height:180px;margin-top:8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span>텍스트 + 모션그래픽 숏폼</span>
+      <span style="font-size:11px">Claude 카피 → FFmpeg 모션 합성</span>
+    </div>
+  </div>
+
+  <div class="dv"></div>
+
+  <div class="block sg">
+    <span class="block-label lc">Claude</span>
+    <p class="h2" style="text-align:center">패키지 구성</p>
+    <div class="pkg">
+      <div class="pkg-card"><p style="font-size:12px;font-weight:600">단품</p><p style="font-size:17px;font-weight:600;margin-top:4px">89,000원</p><p style="font-size:10px;color:#999;margin-top:4px">면도기 본체 + 충전독</p></div>
+      <div class="pkg-card ft"><div style="font-size:10px;color:#2563eb;font-weight:600;margin-bottom:2px">BEST</div><p style="font-size:12px;font-weight:600">풀패키지</p><p style="font-size:17px;font-weight:600;margin-top:4px">119,000원</p><p style="font-size:10px;color:#999;margin-top:4px">본체 + 충전독 + 교체날 2개 + 파우치</p></div>
+    </div>
+    <button class="cta-btn">구매하기</button>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — ComfyUI Dual Input Path</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;display:flex;justify-content:center;padding:24px}
+.wrap{background:#fff;border-radius:16px;padding:24px;border:1px solid #e5e3de;max-width:700px;width:100%}
+h1{font-size:18px;font-weight:600;text-align:center;margin-bottom:2px}
+.sub{font-size:12px;color:#888;text-align:center;margin-bottom:24px}
+.paths{display:flex;gap:24px;margin-bottom:20px}
+.path{flex:1}
+.path-header{text-align:center;border-radius:8px;padding:12px;margin-bottom:12px}
+.path-a .path-header{background:#E1F5EE;border:1px solid #9FE1CB}
+.path-b .path-header{background:#FAECE7;border:1px solid #F5C4B3}
+.path-title{font-size:14px;font-weight:600}
+.path-a .path-title{color:#085041}
+.path-b .path-title{color:#712B13}
+.path-sub{font-size:11px;color:#888;margin-top:2px}
+.node{border:1px solid #e5e3de;border-radius:8px;padding:10px 12px;text-align:center;margin-bottom:8px}
+.node-title{font-size:12px;font-weight:600}
+.path-a .node{background:#E1F5EE;border-color:#9FE1CB}
+.path-a .node-title{color:#085041}
+.path-b .node{background:#FAECE7;border-color:#F5C4B3}
+.path-b .node-title{color:#712B13}
+.arrow{text-align:center;color:#ccc;font-size:14px;margin:4px 0}
+.converge{background:#EEEDFE;border:1px solid #AFA9EC;border-radius:8px;padding:14px;text-align:center;margin-top:8px}
+.converge-title{font-size:14px;font-weight:600;color:#3C3489}
+.converge-sub{font-size:11px;color:#888;margin-top:4px}
+.divider{display:flex;align-items:center;gap:8px;margin:16px 0}
+.divider-line{flex:1;height:1px;background:#e5e3de}
+.divider-text{font-size:10px;color:#aaa;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ComfyUI Image Input — Dual Path</h1>
+  <p class="sub">사용자 이미지 업로드 or 텍스트→이미지 생성 → 공통 파이프라인 진입</p>
+
+  <div class="paths">
+    <!-- Path A -->
+    <div class="path path-a">
+      <div class="path-header">
+        <div class="path-title">Path A</div>
+        <div class="path-sub">사용자 제품 이미지 업로드</div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="node-title">배경 제거 (RMBG 2.0)</div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="node-title">리라이팅 / 배경 합성</div></div>
+    </div>
+
+    <!-- Path B -->
+    <div class="path path-b">
+      <div class="path-header">
+        <div class="path-title">Path B</div>
+        <div class="path-sub">텍스트 → 이미지 생성</div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="node-title">프롬프트 생성 (Claude)</div></div>
+      <div class="arrow">↓</div>
+      <div class="node"><div class="node-title">SDXL / Flux 생성</div></div>
+    </div>
+  </div>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-text">CONVERGE</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="converge">
+    <div class="converge-title">ComfyUI 공통 파이프라인</div>
+    <div class="converge-sub">연출 / GIF / 영상 / Kling API</div>
+  </div>
+</div>
+</body>
+</html>

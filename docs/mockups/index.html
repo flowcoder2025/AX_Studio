@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX Studio — Mockup Index</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:#f5f5f5;padding:40px;max-width:700px;margin:0 auto}
+h1{font-size:24px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:#888;margin-bottom:32px}
+.section-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.5px;margin:24px 0 10px;padding-left:4px}
+.card{background:#fff;border:1px solid #e5e3de;border-radius:12px;padding:14px 18px;margin-bottom:8px;text-decoration:none;display:block;transition:all .15s}
+.card:hover{border-color:#2563eb;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.card-num{font-size:10px;color:#2563eb;font-weight:600;margin-bottom:2px}
+.card-title{font-size:14px;font-weight:600;color:#222;margin-bottom:3px}
+.card-desc{font-size:11px;color:#888;line-height:1.5}
+.tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:10px;margin-top:5px}
+.tag-tmpl{background:#E6F1FB;color:#0C447C}
+.tag-sys{background:#EEEDFE;color:#3C3489}
+.tag-wf{background:#FAECE7;color:#712B13}
+.tag-arch{background:#E1F5EE;color:#085041}
+</style>
+</head>
+<body>
+<h1>AX Studio Mockups</h1>
+<p class="sub">상세페이지 템플릿 + 시스템 아키텍처 + 워크플로우 설계 · 총 9개 · 브라우저에서 열어 확인</p>
+
+<div class="section-label">System Architecture</div>
+
+<a class="card" href="06-system-architecture.html">
+  <div class="card-num">06</div>
+  <div class="card-title">System Architecture</div>
+  <div class="card-desc">전체 시스템 구조 — Input(3모드) → Core(Next.js+Pipeline+Output) → Service(Claude+ComfyUI+Puppeteer) → FFmpeg → Video Types(4종) → Output(HTML+이미지)</div>
+  <span class="tag tag-arch">architecture</span>
+</a>
+
+<a class="card" href="07-pipeline-flow.html">
+  <div class="card-num">07</div>
+  <div class="card-title">Pipeline Flow</div>
+  <div class="card-desc">단일 제품 8단계 처리 흐름 — 입력파싱 → Claude 분석/블록/카피 → 이미지+영상 병렬 생성 → FFmpeg → 블록 조립 → Puppeteer 렌더</div>
+  <span class="tag tag-arch">architecture</span>
+</a>
+
+<a class="card" href="08-block-layout-system.html">
+  <div class="card-num">08</div>
+  <div class="card-title">Block Layout System</div>
+  <div class="card-desc">상세페이지 블록 순서 시각화 — 14개 블록 세로 배치, 좌측에 데이터 소스(Claude/ComfyUI/FFmpeg), 우측에 출력 형태</div>
+  <span class="tag tag-arch">architecture</span>
+</a>
+
+<a class="card" href="09-comfyui-dual-input.html">
+  <div class="card-num">09</div>
+  <div class="card-title">ComfyUI Dual Input Path</div>
+  <div class="card-desc">이미지 입력 분기 — Path A(사용자 업로드→RMBG→합성) vs Path B(Claude→SDXL/Flux→T2I) → 공통 파이프라인</div>
+  <span class="tag tag-wf">workflow</span>
+</a>
+
+<div class="section-label">Template Mockups</div>
+
+<a class="card" href="01-grooming-template.html">
+  <div class="card-num">01</div>
+  <div class="card-title">Grooming Template</div>
+  <div class="card-desc">면도기 상세페이지 — 다크 히어로 + 기술 스펙 + 360°·시연·BA·숏폼 영상 4종 플레이스홀더 · 전 블록 소스 라벨</div>
+  <span class="tag tag-tmpl">template</span>
+</a>
+
+<a class="card" href="02-fashion-template.html">
+  <div class="card-num">02</div>
+  <div class="card-title">Fashion / Clothing Template</div>
+  <div class="card-desc">리넨 셔츠 — 컬러 스와치 5종 + 사이즈 가이드 테이블(M 하이라이트) + 코디 제안 3열 + 360° 착용 회전</div>
+  <span class="tag tag-tmpl">template</span>
+</a>
+
+<a class="card" href="03-electronics-template.html">
+  <div class="card-num">03</div>
+  <div class="card-title">Electronics / IT Template</div>
+  <div class="card-desc">ANC 이어폰 — 경쟁사 스펙 비교(자사 하이라이트) + 호환 기기 칩(초록/회색) + 기능 2×2 그리드 + 언박싱 4열</div>
+  <span class="tag tag-tmpl">template</span>
+</a>
+
+<div class="section-label">Interactive Systems</div>
+
+<a class="card" href="04-template-system-map.html">
+  <div class="card-num">04</div>
+  <div class="card-title">14 Category Template Map</div>
+  <div class="card-desc">14개 카테고리 인터랙티브 — 클릭하면 블록 순서(번호+소스), 톤 태그, 영상 슬롯, 특이사항 메모 실시간 전환</div>
+  <span class="tag tag-sys">interactive</span>
+</a>
+
+<a class="card" href="05-comfyui-workflows.html">
+  <div class="card-num">05</div>
+  <div class="card-title">ComfyUI 4 Workflow Designs</div>
+  <div class="card-desc">4개 탭 — 360° Rotation / Feature Demo / Before→After / Text Shortform · Stage별 노드 + Config + 대안 경로</div>
+  <span class="tag tag-wf">workflow</span>
+</a>
+
+</body>
+</html>
