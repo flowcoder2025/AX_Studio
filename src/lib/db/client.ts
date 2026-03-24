@@ -87,6 +87,7 @@ db.exec(`
 try { db.exec(`ALTER TABLE blocks ADD COLUMN multi_lang_data TEXT`); } catch {}
 try { db.exec(`ALTER TABLE templates ADD COLUMN blocks_json TEXT NOT NULL DEFAULT '[]'`); } catch {}
 try { db.exec(`ALTER TABLE templates ADD COLUMN include_copy INTEGER NOT NULL DEFAULT 0`); } catch {}
+try { db.exec(`ALTER TABLE projects ADD COLUMN theme_id TEXT DEFAULT 'clean-white'`); } catch {}
 
 // Gallery items 테이블 (생성소 결과물)
 db.exec(`

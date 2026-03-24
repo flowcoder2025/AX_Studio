@@ -12,22 +12,10 @@ import GalleryPanel from '@/components/studio/GalleryPanel';
 import OutputGallery from '@/components/preview/OutputGallery';
 import { BlockDefinition, BlockType } from '@/types/block';
 import { CATEGORIES, CategoryId } from '@/lib/templates/categories';
+import { ThemeDefinition, getThemeById, getDefaultTheme, listThemes } from '@/lib/themes';
 
-// 정규화/스타일 추출은 db/client.ts getBlocks에서 처리 (schema.ts SSOT 기반)
-// hero 기본 스타일은 DB에서 로드 후 style이 없을 때만 적용
-function applyHeroDefaults(blocks: BlockDefinition[], heroStyle: string): BlockDefinition[] {
-  return blocks.map(b => {
-    if (b.type === 'hero' && !b.style?.bgColor) {
-      const isDark = heroStyle === 'dark';
-      return { ...b, style: {
-        ...(b.style || {}),
-        bgColor: isDark ? '#0a0a0a' : '#ffffff',
-        color: isDark ? '#f5f5f5' : '#222222',
-      }};
-    }
-    return b;
-  });
-}
+// 테마가 모든 색상을 CSS 변수로 제어하므로 hero 기본 스타일 불필요
+// 사용자가 block.style.bgColor로 개별 오버라이드 가능
 
 const BLOCK_GROUPS = [
   { label: '미디어', types: ['image_block', 'video_block'] as BlockType[] },
@@ -50,6 +38,7 @@ export default function ProjectDetailPage() {
   const [saving, setSaving] = useState(false);
   const [pipelineWarnings, setPipelineWarnings] = useState<string[]>([]);
   const [projectCategory, setProjectCategory] = useState('grooming');
+  const [projectTheme, setProjectTheme] = useState<ThemeDefinition>(getDefaultTheme());
   const [activeLanguage, setActiveLanguage] = useState<'ko' | 'en' | 'zh'>('ko');
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showOverlay, setShowOverlay] = useState<'json' | 'output' | 'templates' | null>(null);
@@ -135,10 +124,8 @@ export default function ProjectDetailPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.category) setProjectCategory(data.category);
-        if (data.blocks?.length) {
-          const cat = CATEGORIES[data.category as CategoryId];
-          setBlocks(applyHeroDefaults(data.blocks, cat?.heroStyle || 'dark'));
-        }
+        setProjectTheme(getThemeById(data.theme_id || data.themeId) || getDefaultTheme());
+        if (data.blocks?.length) setBlocks(data.blocks);
       }
     } catch {}
   }
@@ -296,7 +283,7 @@ export default function ProjectDetailPage() {
     try {
       await fetch('/api/render/html', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, blocks, category: projectCategory }),
+        body: JSON.stringify({ projectId, blocks, category: projectCategory, themeId: projectTheme.id }),
       });
       if (type === 'image') {
         await fetch('/api/render/image', {
@@ -354,7 +341,7 @@ export default function ProjectDetailPage() {
   }
 
   const visibleBlocks = blocks.filter(b => b.visible).sort((a, b) => a.order - b.order);
-  const heroStyle = CATEGORIES[projectCategory as CategoryId]?.heroStyle || 'dark';
+  // 테마는 projectTheme state에서 관리 (heroStyle 대체)
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -392,6 +379,22 @@ export default function ProjectDetailPage() {
             ))}
           </div>
         )}
+        <select
+          value={projectTheme.id}
+          onChange={e => {
+            const t = getThemeById(e.target.value);
+            if (t) {
+              setProjectTheme(t);
+              // 테마 전환 시 모든 블록의 스타일 오버라이드 초기화
+              const reset = blocks.map(b => ({ ...b, style: undefined, elementStyles: undefined }));
+              setBlocks(reset); saveBlocks(reset);
+              if (selectedBlockId) selectBlock(selectedBlockId);
+            }
+          }}
+          className="text-[11px] text-gray-600 px-2 py-1 rounded border border-gray-200 bg-white"
+        >
+          {listThemes().map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
         <button onClick={() => setShowOverlay('json')} className="text-[11px] text-gray-400 hover:text-gray-600 px-2 py-1 rounded border border-gray-200">JSON</button>
         <button onClick={() => setShowOverlay('output')} className="text-[11px] text-gray-400 hover:text-gray-600 px-2 py-1 rounded border border-gray-200">출력</button>
         <button className="text-[11px] text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded" onClick={() => handleExport('html')}>HTML 내보내기</button>
@@ -433,7 +436,7 @@ export default function ProjectDetailPage() {
         <div className="flex-1 bg-gray-100 overflow-auto">
           <PreviewIframe
             blocks={visibleBlocks}
-            heroStyle={heroStyle}
+            theme={projectTheme}
             categoryName={CATEGORIES[projectCategory as CategoryId]?.nameKo || ''}
             hasMultiLang={hasMultiLang}
             activeLanguage={activeLanguage}
@@ -649,9 +652,9 @@ export default function ProjectDetailPage() {
 }
 
 // 내보내기 HTML과 동일한 미리보기 (iframe + srcdoc + 클릭 선택)
-function PreviewIframe({ blocks, heroStyle, categoryName, hasMultiLang, activeLanguage, selectedBlockId }: {
+function PreviewIframe({ blocks, theme, categoryName, hasMultiLang, activeLanguage, selectedBlockId }: {
   blocks: BlockDefinition[];
-  heroStyle: string;
+  theme: ThemeDefinition;
   categoryName: string;
   hasMultiLang: boolean;
   activeLanguage: 'ko' | 'en' | 'zh';
@@ -666,8 +669,8 @@ function PreviewIframe({ blocks, heroStyle, categoryName, hasMultiLang, activeLa
   }, [blocks, hasMultiLang, activeLanguage]);
 
   const html = useMemo(() =>
-    buildDetailPageHtml(previewBlocks, heroStyle, categoryName, { preview: true }),
-    [previewBlocks, heroStyle, categoryName]
+    buildDetailPageHtml(previewBlocks, theme, categoryName, { preview: true }),
+    [previewBlocks, theme, categoryName]
   );
 
   // iframe 높이를 콘텐츠에 맞춤

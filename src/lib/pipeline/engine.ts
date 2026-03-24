@@ -7,6 +7,7 @@ import { CategoryId, getCategoryById } from '@/lib/templates/categories';
 import { BlockDefinition, BlockType } from '@/types/block';
 import { sendMessage } from '@/lib/claude/client';
 import { buildAnalysisPrompt, buildCopyPrompt, buildBlockRecommendationPrompt } from '@/lib/claude/prompts';
+import { getThemeById } from '@/lib/themes';
 import { withRetry } from '@/lib/utils/retry';
 
 export type PipelineStatus =
@@ -29,6 +30,7 @@ export interface PipelineInput {
   productImages?: string[];
   sourceUrl?: string;
   languages?: string[];
+  themeId?: string;
 }
 
 // In-memory status for SSE
@@ -142,7 +144,13 @@ export async function runPipeline(pipelineId: string, projectId: string, input: 
       .map(b => b.type);
 
     try {
-      const copyPrompt = buildCopyPrompt(input.productName, input.category, analysis, textBlockTypes, input.languages);
+      // 테마 톤 조회 (있으면 카피에 반영)
+      let themeTone: string | undefined;
+      if (input.themeId) {
+        const theme = getThemeById(input.themeId);
+        if (theme) themeTone = theme.tone;
+      }
+      const copyPrompt = buildCopyPrompt(input.productName, input.category, analysis, textBlockTypes, input.languages, themeTone);
       const copyRes = await withRetry(() => sendMessage(
         [{ role: 'user', content: copyPrompt }],
         { system: 'You are a top Korean e-commerce copywriter. Respond with valid JSON only.', maxTokens: 8192 }

@@ -39,7 +39,8 @@ export function buildCopyPrompt(
   category: CategoryId,
   analysis: any,
   blockTypes: string[],
-  languages: string[] = ['ko']
+  languages: string[] = ['ko'],
+  themeTone?: string
 ): string {
   const cat = getCategoryById(category);
 
@@ -70,7 +71,7 @@ Return a JSON object where each key is the block type and the value is the block
   return `You are a top e-commerce copywriter. Generate compelling copy for a ${cat.nameKo} product detail page.
 
 Product: ${productName}
-Tone: ${cat.tone.join(', ')}
+Category tone: ${cat.tone.join(', ')}${themeTone ? `\nDesign theme tone: ${themeTone}` : ''}
 Analysis: ${JSON.stringify(analysis)}
 
 Generate copy for these blocks: ${blockTypes.join(', ')}

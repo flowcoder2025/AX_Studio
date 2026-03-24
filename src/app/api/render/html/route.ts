@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { BlockDefinition } from '@/types/block';
 import { getCategoryById, CategoryId } from '@/lib/templates/categories';
 import { buildDetailPageHtml } from '@/lib/render/html-builder';
+import { getThemeById, getDefaultTheme } from '@/lib/themes';
 import { saveOutput } from '@/lib/db/client';
 import { v4 as uuid } from 'uuid';
 import fs from 'fs/promises';
@@ -9,15 +10,17 @@ import path from 'path';
 
 export async function POST(req: NextRequest) {
   try {
-    const { projectId, blocks, category } = await req.json() as {
+    const { projectId, blocks, category, themeId } = await req.json() as {
       projectId: string;
       blocks: BlockDefinition[];
       category: CategoryId;
+      themeId?: string;
     };
 
     const cat = getCategoryById(category);
+    const theme = getThemeById(themeId || '') || getDefaultTheme();
     const visibleBlocks = blocks.filter(b => b.visible).sort((a, b) => a.order - b.order);
-    let html = buildDetailPageHtml(visibleBlocks, cat?.heroStyle || 'dark', cat?.nameKo || '');
+    let html = buildDetailPageHtml(visibleBlocks, theme, cat?.nameKo || '');
 
     // serve URL을 base64 인라인으로 변환
     html = await inlineAssets(html);
