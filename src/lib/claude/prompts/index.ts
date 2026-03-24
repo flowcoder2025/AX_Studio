@@ -75,19 +75,26 @@ Analysis: ${JSON.stringify(analysis)}
 Generate copy for these blocks: ${blockTypes.join(', ')}
 
 ${langInstructions}
-Follow these rules:
-- hero: headline (2 lines max), subheadline, 3 KPIs
-- painpoint: title + 3-4 customer pain points
-- solution: title + 3-4 differentiators with short descriptions
-- feature: title + 2-3 features with title and description
-- ingredient/tech: title + 2-3 items with name, amount (if applicable), benefit
-- trust: 3 metrics (value + label)
-- review: 2-3 realistic reviews with rating, text, author, meta
-- spec: title + 6-8 spec key-value pairs
-- faq: 3-4 Q&A pairs
-- howto: title + 3 steps with title and description
-- cta: 1-2 packages with name, price, description + button text
-- compare: title + comparison table headers and rows
+Use EXACTLY these JSON key names for each block. The array key name is DIFFERENT per block type — use the EXACT key shown below:
+- hero: { "headline": "", "subheadline": "", "kpis": [{"value":"", "label":""}] }
+- painpoint: { "title": "", "painpoints": ["고민1", "고민2", "고민3"] }
+- solution: { "title": "", "solutions": [{"title": "", "description": ""}] }
+- feature: { "title": "", "features": [{"title": "", "description": ""}] }
+- ingredient/tech: { "title": "", "ingredients": [{"name": "", "amount": "", "benefit": ""}] }
+- trust: { "metrics": [{"value": "", "label": ""}] }
+- review: { "reviews": [{"rating": 5, "text": "", "author": "", "meta": ""}] }
+- spec: { "title": "", "specs": [{"key": "", "value": ""}] }
+- faq: { "faqs": [{"question": "", "answer": ""}] }
+- howto: { "title": "", "steps": [{"title": "", "description": ""}] }
+- cta: { "packages": [{"name": "", "price": "", "description": ""}], "buttonText": "" }
+- compare: { "title": "제품명 vs 일반 제품", "columns": ["제품명", "일반 제품"], "rows": [{"label": "비교항목", "values": ["제품값", "일반값"]}] }
+  IMPORTANT for compare: "values" array length MUST equal "columns" array length. Every cell must have a value, no empty strings.
+- certification: { "certifications": [{"name": "", "description": ""}] }
+- size_guide: { "modelInfo": "", "headers": ["S","M","L"], "rows": [{"label": "", "values": []}], "highlightColumn": 1 }
+- compatibility: { "title": "", "devices": [{"name": "", "compatible": true}], "note": "" }
+- recipe: { "recipes": [{"title": "", "steps": ["단계1", "단계2"]}] }
+- pricing: { "plans": [{"name": "", "price": "", "features": ["기능1"], "featured": false}] }
+- material: { "title": "", "materials": [{"name": "", "description": ""}] }
 
 Respond ONLY with valid JSON.`;
 }
@@ -106,13 +113,34 @@ export function buildVideoScriptPrompt(
 Return: { "klingPrompt": "...", "background": "background description for SDXL", "duration": 4 }`,
 
     demo: `Generate a feature demo motion script. Each scene shows one key feature.
-Return: { "scenes": [{ "feature": "기능명", "klingPrompt": "motion description", "backgroundPrompt": "SDXL background", "overlayText": "화면 텍스트", "duration": 4 }] }`,
+
+IMPORTANT for backgroundPrompt:
+- This is ONLY for generating the BACKGROUND image. The actual product will be composited on top separately.
+- Do NOT describe the product itself in backgroundPrompt. Only describe the environment/surface/setting.
+- Good: "clean white marble countertop surface, soft studio lighting from above, subtle shadow, minimalist"
+- Bad: "vacuum cleaner on a car seat" (this generates the product again, causing duplication)
+- Keep it simple: a surface or environment where the product would be placed.
+
+Return: { "scenes": [{ "feature": "기능명", "klingPrompt": "motion description", "backgroundPrompt": "SDXL background-only prompt (NO product description)", "overlayText": "화면 텍스트", "duration": 4 }] }`,
 
     before_after: `Generate before/after image prompts specific to ${cat.nameKo}.
-Return: { "beforePrompt": "SDXL prompt for problem state", "afterPrompt": "SDXL prompt for improved state", "klingMorphPrompt": "morph transition description", "beforeLabel": "BEFORE 텍스트", "afterLabel": "AFTER 텍스트" }`,
+
+IMPORTANT:
+- beforePrompt: describe the PROBLEM state that this product solves (e.g. dirty floor, rough skin, tangled cables)
+- afterPrompt: describe the IMPROVED state after using the product (e.g. clean floor, smooth skin, organized setup)
+- Do NOT include the product itself in the prompts. Only show the environment/situation before and after.
+- Both prompts must describe the SAME scene/angle for visual consistency.
+- Use realistic photography style, not illustrations.
+
+Return: { "beforePrompt": "SDXL prompt for problem state (English, no product)", "afterPrompt": "SDXL prompt for improved state (English, same scene)", "klingMorphPrompt": "morph transition description", "beforeLabel": "BEFORE 한글 라벨", "afterLabel": "AFTER 한글 라벨" }`,
 
     shortform: `Generate a text motion graphics shortform script (15-30 seconds).
-Return: { "scenes": [{ "text": "화면 텍스트", "kpiValue": null or number, "kpiLabel": null or "라벨", "animation": "fade|slide|zoom", "duration": 4, "backgroundPrompt": "SDXL abstract bg" }], "totalDuration": 20, "aspectRatio": "9:16" }`,
+
+For backgroundPrompt: generate abstract/gradient backgrounds ONLY. No products, no objects, no people.
+Good: "dark gradient with subtle blue glow, abstract, minimalist"
+Bad: "vacuum cleaner on display" (product should NOT appear in background)
+
+Return: { "scenes": [{ "text": "화면 텍스트 (한국어)", "kpiValue": null or number, "kpiLabel": null or "라벨", "animation": "fade|slide|zoom", "duration": 4, "backgroundPrompt": "SDXL abstract background (English, no products)" }], "totalDuration": 20, "aspectRatio": "9:16" }`,
   };
 
   return `You are a Korean e-commerce video director. Create a ${videoType} video script.

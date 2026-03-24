@@ -21,7 +21,7 @@
   "4": {
     "class_type": "CLIPTextEncode",
     "inputs": {
-      "text": "blurry, text, watermark, low quality, cluttered, ugly",
+      "text": "blurry, text, watermark, low quality, cluttered, ugly, product, object, device, appliance, electronics, tool, machine",
       "clip": ["2", 1]
     }
   },
@@ -40,7 +40,7 @@
       "positive": ["3", 0],
       "negative": ["4", 0],
       "latent_image": ["5", 0],
-      "seed": -1,
+      "seed": 0,
       "steps": 25,
       "cfg": 7.0,
       "sampler_name": "euler_ancestral",

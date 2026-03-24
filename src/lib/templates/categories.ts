@@ -27,9 +27,9 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['프리미엄', '기술력', '남성타겟'],
     heroStyle: 'dark',
     blockOrder: [
-      'hero', 'video_360', 'painpoint', 'solution', 'feature',
-      'video_demo', 'tech', 'trust', 'review', 'spec',
-      'faq', 'howto', 'video_short', 'cta'
+      'hero', 'painpoint', 'solution', 'feature',
+      'tech', 'trust', 'review', 'spec',
+      'faq', 'howto', 'cta'
     ],
     videoSlots: ['360° 제품 회전', '면도 시연 모션', '텍스트 모션그래픽'],
     notes: '다크 톤 히어로, 스펙 강조, 남성 타겟 카피',
@@ -44,8 +44,8 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     heroStyle: 'pastel',
     blockOrder: [
       'hero', 'painpoint', 'solution', 'ingredient', 'feature',
-      'video_ba', 'trust', 'review', 'compare', 'howto',
-      'spec', 'certification', 'faq', 'video_short', 'cta'
+      'trust', 'review', 'compare', 'howto',
+      'spec', 'certification', 'faq', 'cta'
     ],
     videoSlots: ['Before→After 변화', '성분 설명 모션', '텍스트 숏폼'],
     notes: '라이트 파스텔 톤, 성분 깊이 강조, Before→After 필수',
@@ -60,7 +60,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     heroStyle: 'light',
     blockOrder: [
       'hero', 'trust', 'review', 'ingredient', 'process',
-      'video_demo', 'certification', 'feature', 'compare',
+      'certification', 'feature', 'compare',
       'howto', 'spec', 'faq', 'cta'
     ],
     videoSlots: ['제조 공정 영상', '성분 설명 모션'],
@@ -75,9 +75,9 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['스펙', '파워', '실용'],
     heroStyle: 'dark',
     blockOrder: [
-      'hero', 'video_360', 'painpoint', 'solution', 'feature',
-      'video_demo', 'compare', 'trust', 'review', 'spec',
-      'howto', 'faq', 'video_short', 'cta'
+      'hero', 'painpoint', 'solution', 'feature',
+      'compare', 'trust', 'review', 'spec',
+      'howto', 'faq', 'cta'
     ],
     videoSlots: ['360° 회전', '흡입력 시연', '텍스트 숏폼'],
     notes: '스펙 수치 대형 표시, 경쟁사 비교 테이블, 기능 시연 필수',
@@ -92,7 +92,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     heroStyle: 'warm',
     blockOrder: [
       'hero', 'trust', 'review', 'painpoint', 'solution',
-      'ingredient', 'feature', 'video_ba', 'certification',
+      'ingredient', 'feature', 'certification',
       'spec', 'faq', 'cta'
     ],
     videoSlots: ['세탁 전후 비교', '텍스처 모션'],
@@ -123,7 +123,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['실용', '호환성', '운전'],
     heroStyle: 'dark',
     blockOrder: [
-      'hero', 'painpoint', 'solution', 'feature', 'video_demo',
+      'hero', 'painpoint', 'solution', 'feature',
       'compare', 'trust', 'review', 'spec', 'howto', 'faq', 'cta'
     ],
     videoSlots: ['설치 시연 모션', '대시보드 장착 360°'],
@@ -138,7 +138,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['스타일', '핏감', '트렌드'],
     heroStyle: 'light',
     blockOrder: [
-      'hero', 'feature', 'video_360', 'material', 'size_guide',
+      'hero', 'feature', 'material', 'size_guide',
       'styling', 'trust', 'review', 'spec', 'faq', 'cta'
     ],
     videoSlots: ['360° 착용 회전', '코디 제안 숏폼'],
@@ -153,9 +153,9 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['테크', '디테일', '비교'],
     heroStyle: 'dark',
     blockOrder: [
-      'hero', 'video_360', 'feature', 'video_demo', 'compare',
+      'hero', 'feature', 'compare',
       'tech', 'trust', 'review', 'compatibility', 'spec',
-      'unboxing', 'faq', 'video_short', 'cta'
+      'unboxing', 'faq', 'cta'
     ],
     videoSlots: ['360° 회전', '기능 시연', '스펙 비교 숏폼'],
     notes: '스펙 비교 테이블 대형, 호환성 필수, 언박싱 구성품',
@@ -170,7 +170,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     heroStyle: 'warm',
     blockOrder: [
       'hero', 'painpoint', 'ingredient', 'certification', 'feature',
-      'video_demo', 'trust', 'review', 'compare', 'howto',
+      'trust', 'review', 'compare', 'howto',
       'spec', 'faq', 'cta'
     ],
     videoSlots: ['급여 시연 모션', '성분 설명'],
@@ -185,9 +185,9 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['액티브', '성과', '도전'],
     heroStyle: 'dark',
     blockOrder: [
-      'hero', 'video_demo', 'painpoint', 'solution', 'feature',
-      'video_ba', 'trust', 'review', 'spec', 'howto',
-      'faq', 'video_short', 'cta'
+      'hero', 'painpoint', 'solution', 'feature',
+      'trust', 'review', 'spec', 'howto',
+      'faq', 'cta'
     ],
     videoSlots: ['운동 시연', 'Before→After 체형', '운동 숏폼'],
     notes: '액션 영상 중심, Before→After 체형 변화, 운동 가이드',
@@ -201,7 +201,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['맛있는', '편리', '홈쿡'],
     heroStyle: 'warm',
     blockOrder: [
-      'hero', 'painpoint', 'solution', 'feature', 'video_demo',
+      'hero', 'painpoint', 'solution', 'feature',
       'recipe', 'trust', 'review', 'spec', 'howto', 'faq', 'cta'
     ],
     videoSlots: ['조리 시연 모션', '레시피 숏폼'],
@@ -216,7 +216,7 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['공간', '디자인', '실용'],
     heroStyle: 'light',
     blockOrder: [
-      'hero', 'feature', 'video_360', 'material', 'size_guide',
+      'hero', 'feature', 'material', 'size_guide',
       'styling', 'trust', 'review', 'howto', 'spec', 'faq', 'cta'
     ],
     videoSlots: ['360° 회전', '공간 배치 연출'],
@@ -231,8 +231,8 @@ export const CATEGORIES: Record<CategoryId, CategoryTemplate> = {
     tone: ['효율', '성장', '가치'],
     heroStyle: 'light',
     blockOrder: [
-      'hero', 'painpoint', 'solution', 'feature', 'video_demo',
-      'pricing', 'trust', 'review', 'faq', 'video_short', 'cta'
+      'hero', 'painpoint', 'solution', 'feature',
+      'pricing', 'trust', 'review', 'faq', 'cta'
     ],
     videoSlots: ['서비스 시연', '소개 숏폼'],
     notes: 'UI 스크린샷 중심, 요금제 비교 특화, 무료체험 CTA',

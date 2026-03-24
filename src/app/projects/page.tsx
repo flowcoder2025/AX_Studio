@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { CATEGORIES, CategoryId, getCategoryList } from '@/lib/templates/categories';
-import ImageUploader from '@/components/ui/ImageUploader';
 
 interface ProjectItem {
   id: string;
@@ -25,7 +24,7 @@ export default function ProjectsPage() {
   const [sourceUrl, setSourceUrl] = useState('');
   const [remakeStyle, setRemakeStyle] = useState('premium');
   const [addVideo, setAddVideo] = useState(true);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [keyFeatures, setKeyFeatures] = useState('');
   const [templates, setTemplates] = useState<any[]>([]);
   const [languages, setLanguages] = useState<string[]>(['ko']);
 
@@ -74,22 +73,12 @@ export default function ProjectsPage() {
       } else {
         if (!selectedCategory || !productName) { setCreating(false); return; }
 
-        // 이미지 먼저 업로드
-        let imagePaths: string[] = [];
-        if (uploadedFiles.length > 0) {
-          const fd = new FormData();
-          uploadedFiles.forEach(f => fd.append('images', f));
-          const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
-          const uploadData = await uploadRes.json();
-          imagePaths = uploadData.imagePaths || [];
-        }
-
         res = await fetch('/api/pipeline/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             mode, category: selectedCategory, productName,
-            productImages: imagePaths.length > 0 ? imagePaths : undefined,
+            keyFeatures: keyFeatures || undefined,
             languages: languages.length > 0 ? languages : ['ko'],
             ...(specData ? {
               specSheet: specData.specs,
@@ -102,7 +91,8 @@ export default function ProjectsPage() {
       }
       const data = await res.json();
       if (data.projectId) {
-        window.location.href = `/projects/${data.projectId}`;
+        const query = data.pipelineId ? `?pipeline=${data.pipelineId}` : '';
+        window.location.href = `/projects/${data.projectId}${query}`;
       }
     } catch (e) {
       console.error('Create failed:', e);
@@ -151,11 +141,20 @@ export default function ProjectsPage() {
               value={productName} onChange={(e) => setProductName(e.target.value)} />
           </div>
 
-          {/* Image upload (Mode A, B) */}
+          {/* Key features */}
           {(mode === 'simple' || mode === 'detailed') && (
             <div className="mb-4">
-              <label className="text-sm text-gray-600 block mb-1">제품 이미지</label>
-              <ImageUploader onUpload={setUploadedFiles} maxFiles={5} />
+              <label className="text-sm text-gray-600 block mb-1">핵심 특징</label>
+              <input type="text" className="input" placeholder="예: 6D 자유회전 헤드, IPX7 완전방수, 60분 연속사용"
+                value={keyFeatures} onChange={(e) => setKeyFeatures(e.target.value)} />
+              <p className="text-[10px] text-gray-400 mt-1">쉼표로 구분하면 더 정확한 카피가 생성됩니다</p>
+            </div>
+          )}
+
+          {/* 이미지 안내 */}
+          {(mode === 'simple' || mode === 'detailed') && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-[11px] text-blue-700">이미지/영상은 카피 생성 후 <strong>생성소 탭</strong>에서 추가할 수 있습니다.</p>
             </div>
           )}
 
@@ -305,9 +304,14 @@ export default function ProjectsPage() {
             <div key={p.id} className="card flex items-center justify-between">
               <a href={`/projects/${p.id}`} className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${p.status === 'complete' ? 'bg-green-500' : p.status === 'error' ? 'bg-red-400' : 'bg-amber-400'}`} />
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'complete' ? 'bg-green-500' : p.status === 'error' ? 'bg-red-400' : p.status === 'draft' ? 'bg-gray-300' : 'bg-amber-400 animate-pulse'}`} />
                   <div>
-                    <p className="text-sm font-medium truncate">{p.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      {p.status !== 'complete' && p.status !== 'draft' && p.status !== 'error' && (
+                        <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">진행 중</span>
+                      )}
+                    </div>
                     <p className="text-[11px] text-gray-400">{CATEGORIES[p.category as CategoryId]?.nameKo || p.category} · {p.mode} · {new Date(p.created_at * 1000).toLocaleDateString('ko')}</p>
                   </div>
                 </div>

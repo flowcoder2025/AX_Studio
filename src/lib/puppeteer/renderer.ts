@@ -4,7 +4,9 @@ import puppeteer, { Browser } from 'puppeteer';
 import path from 'path';
 import fs from 'fs/promises';
 
-let browser: Browser | null = null;
+// dev 모드 HMR에서 좀비 프로세스 방지 — globalThis에 인스턴스 유지
+const globalForPuppeteer = globalThis as unknown as { __browser?: Browser | null };
+let browser: Browser | null = globalForPuppeteer.__browser || null;
 
 // Platform-specific widths (in pixels)
 const PLATFORM_WIDTHS: Record<string, number> = {
@@ -15,11 +17,12 @@ const PLATFORM_WIDTHS: Record<string, number> = {
 };
 
 async function getBrowser(): Promise<Browser> {
-  if (!browser) {
+  if (!browser || !browser.connected) {
     browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
+    globalForPuppeteer.__browser = browser;
   }
   return browser;
 }
@@ -79,8 +82,32 @@ export async function renderFileToImage(
   outputPath: string,
   options?: { platform?: string; format?: 'png' | 'jpeg' }
 ): Promise<string> {
-  const html = await fs.readFile(htmlPath, 'utf-8');
-  return renderHtmlToImage(html, outputPath, options);
+  const br = await getBrowser();
+  const page = await br.newPage();
+  const width = PLATFORM_WIDTHS[options?.platform || 'default'] || 860;
+
+  await page.setViewport({ width, height: 800 });
+
+  // file:// URL로 로드하면 상대 API 경로가 안 되므로 localhost로 접근
+  // HTML 파일이 output/ 아래에 있으므로 serve API로 접근
+  const relativePath = path.relative(process.cwd(), htmlPath).replace(/\\/g, '/');
+  const port = process.env.PORT || '3000';
+  const url = `http://localhost:${port}/api/output/serve?path=${relativePath}`;
+
+  await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+
+  const bodyHeight = await page.evaluate(() => document.body.scrollHeight);
+  await page.setViewport({ width, height: bodyHeight });
+
+  await page.screenshot({
+    path: outputPath,
+    type: options?.format || 'png',
+    quality: options?.format === 'jpeg' ? 90 : undefined,
+    fullPage: true,
+  });
+
+  await page.close();
+  return outputPath;
 }
 
 // Scrape a URL — for Mode C (URL Remake)
@@ -126,9 +153,8 @@ export async function scrapeUrl(url: string): Promise<{
 // Cleanup browser on process exit
 export async function closeBrowser(): Promise<void> {
   if (browser) {
-    await browser.close();
+    await browser.close().catch(() => {});
     browser = null;
+    globalForPuppeteer.__browser = null;
   }
 }
-
-process.on('exit', () => { browser?.close(); });

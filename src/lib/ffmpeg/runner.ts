@@ -29,18 +29,34 @@ export async function framesToVideo(
   framePattern: string,
   outputPath: string,
   fps: number = 24,
-  options?: { loop?: number; crf?: number }
+  options?: { loop?: number; crf?: number; duration?: number }
 ): Promise<string> {
-  const args = [
-    '-y',
-    '-framerate', String(fps),
-    '-i', framePattern,
+  const args: string[] = ['-y'];
+
+  if (options?.duration) {
+    // 정적 이미지 → 지정 길이 영상 (loop 입력)
+    args.push('-loop', '1', '-i', framePattern, '-t', String(options.duration));
+  } else {
+    // 프레임 시퀀스 → 영상
+    args.push('-framerate', String(fps), '-i', framePattern);
+  }
+
+  args.push(
     '-c:v', 'libx264',
     '-crf', String(options?.crf || 23),
     '-pix_fmt', 'yuv420p',
-    ...(options?.loop !== undefined ? ['-vf', `loop=${options.loop}:size=${fps * 2}:start=0`] : []),
-    outputPath,
-  ];
+  );
+
+  if (options?.loop !== undefined && !options?.duration) {
+    args.push('-vf', `loop=${options.loop}:size=${fps * 2}:start=0`);
+  }
+
+  // 프레임레이트 보정 (정적 이미지 루프 시 필요)
+  if (options?.duration) {
+    args.push('-r', '30');
+  }
+
+  args.push(outputPath);
 
   await exec(FFMPEG, args);
   return outputPath;
@@ -84,8 +100,8 @@ export async function concatWithTransitions(
   transitionDuration: number = 0.5
 ): Promise<string> {
   if (inputs.length === 1) {
-    // Single input, just copy
-    await exec(FFMPEG, ['-y', '-i', inputs[0].file, '-c', 'copy', outputPath]);
+    // Single input — re-encode로 코덱 호환성 보장
+    await exec(FFMPEG, ['-y', '-i', inputs[0].file, '-c:v', 'libx264', '-crf', '23', '-pix_fmt', 'yuv420p', outputPath]);
     return outputPath;
   }
 

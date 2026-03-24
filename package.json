@@ -20,8 +20,7 @@
     "sharp": "^0.33.0",
     "uuid": "^9.0.0",
     "ws": "^8.16.0",
-    "xlsx": "^0.18.5",
-    "zustand": "^4.5.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",

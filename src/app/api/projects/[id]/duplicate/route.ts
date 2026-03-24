@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const sourceBlocks = db.getBlocks(params.id);
 
     const newId = uuid();
-    db.createProject(newId, source.name + ' (복사)', source.category, source.mode);
+    db.createProject(newId, source.name + ' (복사)', source.category, source.mode, JSON.parse(source.input_data || '{}'));
 
     const newBlocks = sourceBlocks.map((b: any) => ({
       ...b,

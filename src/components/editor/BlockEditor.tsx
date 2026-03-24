@@ -4,13 +4,22 @@ import { useState, useEffect } from 'react';
 import { BlockDefinition, BlockType } from '@/types/block';
 import { BLOCK_NAMES } from '@/components/blocks';
 
+const EMOJI_PRESETS = [
+  '💡', '⚡', '🛡️', '✨', '🎯', '🔧', '📦', '🔋',
+  '💪', '❤️', '✅', '🏆', '💎', '🔒', '⭐', '👍',
+  '🧴', '💧', '🌿', '🔥', '❄️', '💨', '🌊', '☀️',
+  '📱', '🚗', '🏠', '🐾', '🏃', '🍽️', '👶', '💄',
+];
+
 interface BlockEditorProps {
   block: BlockDefinition | null;
   onSave: (blockId: string, data: any) => void;
+  onLiveUpdate?: (blockId: string, data: any) => void;
+  onGalleryPick?: (blockId: string, field: string) => void;
   onClose: () => void;
 }
 
-export default function BlockEditor({ block, onSave, onClose }: BlockEditorProps) {
+export default function BlockEditor({ block, onSave, onLiveUpdate, onGalleryPick, onClose }: BlockEditorProps) {
   const [formData, setFormData] = useState<any>({});
   const [jsonMode, setJsonMode] = useState(false);
   const [jsonText, setJsonText] = useState('');
@@ -21,6 +30,13 @@ export default function BlockEditor({ block, onSave, onClose }: BlockEditorProps
       setJsonText(JSON.stringify(block.data || {}, null, 2));
     }
   }, [block]);
+
+  // 실시간 미리보기 업데이트
+  useEffect(() => {
+    if (block && onLiveUpdate && !jsonMode && Object.keys(formData).length > 0) {
+      onLiveUpdate(block.id, formData);
+    }
+  }, [formData]);
 
   if (!block) return null;
 
@@ -80,8 +96,8 @@ export default function BlockEditor({ block, onSave, onClose }: BlockEditorProps
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex" style={{ background: 'rgba(0,0,0,0.3)' }}>
-      <div className="absolute inset-y-0 right-0 w-[480px] bg-white border-l border-ax-border flex flex-col">
+    <div className="fixed inset-0 z-50 flex" style={{ background: 'rgba(0,0,0,0.3)' }} onClick={onClose}>
+      <div className="absolute inset-y-0 right-0 w-[480px] bg-white border-l border-ax-border flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-ax-border">
           <div>
@@ -112,7 +128,8 @@ export default function BlockEditor({ block, onSave, onClose }: BlockEditorProps
               onChange={(e) => setJsonText(e.target.value)}
             />
           ) : (
-            renderFormFields(block.type, formData, updateField, updateArrayItem, addArrayItem, removeArrayItem)
+            renderFormFields(block.type, formData, updateField, updateArrayItem, addArrayItem, removeArrayItem,
+              onGalleryPick ? (field: string) => onGalleryPick(block.id, field) : undefined)
           )}
         </div>
 
@@ -126,14 +143,42 @@ export default function BlockEditor({ block, onSave, onClose }: BlockEditorProps
   );
 }
 
-// Form field renderer per block type
-function renderFormFields(
+function ImageSlot({ label, url, onGalleryPick, onClear }: {
+  label: string; url?: string;
+  onGalleryPick?: () => void; onClear?: () => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-[11px] text-gray-500">{label}</label>
+      {url ? (
+        <div className="flex items-center gap-2">
+          <img src={url} alt="" className="h-16 rounded border object-contain bg-gray-50" />
+          <div className="flex flex-col gap-1">
+            {onGalleryPick && <button onClick={onGalleryPick} className="text-[10px] text-blue-600 hover:underline">변경</button>}
+            {onClear && <button onClick={onClear} className="text-[10px] text-red-400 hover:underline">제거</button>}
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={onGalleryPick}
+          className="w-full py-3 border-2 border-dashed border-gray-200 rounded-lg text-xs text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors"
+        >
+          갤러리에서 불러오기
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Form field renderer per block type — exported for inline panel use
+export function renderFormFields(
   type: BlockType,
   data: any,
   update: (path: string, value: any) => void,
   updateArr: (arr: string, idx: number, field: string, value: any) => void,
   addArr: (arr: string, template: any) => void,
   removeArr: (arr: string, idx: number) => void,
+  galleryPick?: (field: string) => void,
 ) {
   switch (type) {
     case 'hero':
@@ -148,6 +193,12 @@ function renderFormFields(
             onUpdate={(i, f, v) => updateArr('kpis', i, f, v)}
             onAdd={() => addArr('kpis', { value: '', label: '' })}
             onRemove={(i) => removeArr('kpis', i)}
+          />
+          <ImageSlot
+            label="히어로 이미지"
+            url={data.heroImageUrl}
+            onGalleryPick={() => galleryPick?.('heroImageUrl')}
+            onClear={() => update('heroImageUrl', undefined)}
           />
         </div>
       );
@@ -164,91 +215,113 @@ function renderFormFields(
         </div>
       );
 
-    case 'solution':
+    case 'solution': {
+      const solKey = data.solutions ? 'solutions' : 'items';
       return (
         <div className="space-y-4">
           <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
           <ArrayField
             label="차별화 포인트"
-            items={data.solutions || data.items || []}
-            fields={[{ key: 'icon', label: '아이콘' }, { key: 'title', label: '제목' }, { key: 'description', label: '설명' }]}
-            onUpdate={(i, f, v) => updateArr('solutions', i, f, v)}
-            onAdd={() => addArr('solutions', { icon: '', title: '', description: '' })}
-            onRemove={(i) => removeArr('solutions', i)}
+            items={data[solKey] || []}
+            fields={[{ key: 'icon', label: '아이콘 (이모지/텍스트)' }, { key: 'title', label: '제목' }, { key: 'description', label: '설명' }]}
+            onUpdate={(i, f, v) => updateArr(solKey, i, f, v)}
+            onAdd={() => addArr(solKey, { icon: '', title: '', description: '' })}
+            onRemove={(i) => removeArr(solKey, i)}
           />
         </div>
       );
+    }
 
-    case 'feature':
+    case 'feature': {
+      const featureItems = data.features || data.items || [];
       return (
         <div className="space-y-4">
           <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
           <ArrayField
             label="기능"
-            items={data.features || data.items || []}
+            items={featureItems}
             fields={[{ key: 'title', label: '기능명' }, { key: 'description', label: '설명' }]}
-            onUpdate={(i, f, v) => updateArr('features', i, f, v)}
-            onAdd={() => addArr('features', { title: '', description: '' })}
-            onRemove={(i) => removeArr('features', i)}
+            onUpdate={(i, f, v) => updateArr(data.features ? 'features' : 'items', i, f, v)}
+            onAdd={() => addArr(data.features ? 'features' : 'items', { title: '', description: '' })}
+            onRemove={(i) => removeArr(data.features ? 'features' : 'items', i)}
+          />
+          {featureItems.map((item: any, i: number) => (
+            <ImageSlot
+              key={i}
+              label={`${item.title || `기능 ${i + 1}`} 이미지`}
+              url={item.imageUrl}
+              onGalleryPick={() => galleryPick?.(`${data.features ? 'features' : 'items'}.${i}.imageUrl`)}
+              onClear={() => updateArr(data.features ? 'features' : 'items', i, 'imageUrl', undefined)}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    case 'trust':
+      return (
+        <div className="space-y-4">
+          <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
+          <ArrayField
+            label="신뢰 지표"
+            items={data.metrics || []}
+            fields={[{ key: 'value', label: '수치' }, { key: 'label', label: '라벨' }]}
+            onUpdate={(i, f, v) => updateArr('metrics', i, f, v)}
+            onAdd={() => addArr('metrics', { value: '', label: '' })}
+            onRemove={(i) => removeArr('metrics', i)}
           />
         </div>
       );
 
-    case 'trust':
-      return (
-        <ArrayField
-          label="신뢰 지표"
-          items={data.metrics || []}
-          fields={[{ key: 'value', label: '수치' }, { key: 'label', label: '라벨' }]}
-          onUpdate={(i, f, v) => updateArr('metrics', i, f, v)}
-          onAdd={() => addArr('metrics', { value: '', label: '' })}
-          onRemove={(i) => removeArr('metrics', i)}
-        />
-      );
-
-    case 'review':
+    case 'review': {
+      const revKey = data.reviews ? 'reviews' : 'items';
       return (
         <ArrayField
           label="후기"
-          items={data.reviews || data.items || []}
+          items={data[revKey] || []}
           fields={[
             { key: 'rating', label: '별점 (1-5)', type: 'number' },
             { key: 'text', label: '내용' },
             { key: 'author', label: '작성자' },
             { key: 'meta', label: '메타 (연령/구매인증 등)' },
           ]}
-          onUpdate={(i, f, v) => updateArr('reviews', i, f, f === 'rating' ? Number(v) : v)}
-          onAdd={() => addArr('reviews', { rating: 5, text: '', author: '', meta: '' })}
-          onRemove={(i) => removeArr('reviews', i)}
+          onUpdate={(i, f, v) => updateArr(revKey, i, f, f === 'rating' ? Number(v) : v)}
+          onAdd={() => addArr(revKey, { rating: 5, text: '', author: '', meta: '' })}
+          onRemove={(i) => removeArr(revKey, i)}
         />
       );
+    }
 
-    case 'spec':
+    case 'spec': {
+      const specKey = data.specs ? 'specs' : 'items';
       return (
         <div className="space-y-4">
           <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
           <ArrayField
             label="스펙"
-            items={data.specs || data.items || []}
+            items={data[specKey] || []}
             fields={[{ key: 'key', label: '항목' }, { key: 'value', label: '값' }]}
-            onUpdate={(i, f, v) => updateArr('specs', i, f, v)}
-            onAdd={() => addArr('specs', { key: '', value: '' })}
-            onRemove={(i) => removeArr('specs', i)}
+            onUpdate={(i, f, v) => updateArr(specKey, i, f, v)}
+            onAdd={() => addArr(specKey, { key: '', value: '' })}
+            onRemove={(i) => removeArr(specKey, i)}
           />
         </div>
       );
+    }
 
-    case 'faq':
+    case 'faq': {
+      const faqKey = data.faqs ? 'faqs' : 'items';
       return (
         <ArrayField
           label="FAQ"
-          items={data.faqs || data.items || []}
+          items={data[faqKey] || []}
           fields={[{ key: 'question', label: '질문' }, { key: 'answer', label: '답변' }]}
-          onUpdate={(i, f, v) => updateArr('faqs', i, f, v)}
-          onAdd={() => addArr('faqs', { question: '', answer: '' })}
-          onRemove={(i) => removeArr('faqs', i)}
+          onUpdate={(i, f, v) => updateArr(faqKey, i, f, v)}
+          onAdd={() => addArr(faqKey, { question: '', answer: '' })}
+          onRemove={(i) => removeArr(faqKey, i)}
         />
       );
+    }
 
     case 'cta':
       return (
@@ -321,20 +394,28 @@ function renderFormFields(
       );
 
     case 'ingredient':
-    case 'tech':
+    case 'tech': {
+      const ingKey = data.ingredients ? 'ingredients' : 'items';
       return (
         <div className="space-y-4">
           <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
+          <ImageSlot
+            label={type === 'tech' ? '기술 이미지' : '성분 이미지'}
+            url={data.imageUrl}
+            onGalleryPick={() => galleryPick?.('imageUrl')}
+            onClear={() => update('imageUrl', undefined)}
+          />
           <ArrayField
             label={type === 'tech' ? '기술' : '성분'}
-            items={data.ingredients || data.items || []}
+            items={data[ingKey] || []}
             fields={[{ key: 'name', label: '이름' }, { key: 'amount', label: '함량' }, { key: 'benefit', label: '효능' }]}
-            onUpdate={(i, f, v) => updateArr('ingredients', i, f, v)}
-            onAdd={() => addArr('ingredients', { name: '', amount: '', benefit: '' })}
-            onRemove={(i) => removeArr('ingredients', i)}
+            onUpdate={(i, f, v) => updateArr(ingKey, i, f, v)}
+            onAdd={() => addArr(ingKey, { name: '', amount: '', benefit: '' })}
+            onRemove={(i) => removeArr(ingKey, i)}
           />
         </div>
       );
+    }
 
     case 'compatibility':
       return (
@@ -441,7 +522,33 @@ function renderFormFields(
 
     case 'styling':
       return (
-        <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
+        <div className="space-y-4">
+          <Field label="제목" value={data.title} onChange={(v) => update('title', v)} />
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">코디 이미지 ({(data.images || []).length}개)</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(data.images || []).map((img: string, i: number) => (
+                <div key={i} className="relative group">
+                  <img src={img} alt="" className="w-full h-20 object-cover rounded-lg border border-gray-200" />
+                  <button
+                    onClick={() => {
+                      const imgs = [...(data.images || [])];
+                      imgs.splice(i, 1);
+                      update('images', imgs);
+                    }}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] flex items-center justify-center opacity-0 group-hover:opacity-100"
+                  >×</button>
+                </div>
+              ))}
+              <button
+                onClick={() => galleryPick?.(`images.${(data.images || []).length}.url`)}
+                className="h-20 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-300 hover:border-blue-300 hover:text-blue-400 transition-colors"
+              >
+                <span className="text-lg">+</span>
+              </button>
+            </div>
+          </div>
+        </div>
       );
 
     case 'video_360':
@@ -449,7 +556,41 @@ function renderFormFields(
     case 'video_ba':
     case 'video_short':
       return (
-        <Field label="캡션" value={data.caption} onChange={(v) => update('caption', v)} />
+        <div className="space-y-4">
+          <ImageSlot
+            label="영상"
+            url={data.videoUrl}
+            onGalleryPick={() => galleryPick?.('videoUrl')}
+            onClear={() => update('videoUrl', undefined)}
+          />
+          <Field label="캡션" value={data.caption} onChange={(v) => update('caption', v)} />
+        </div>
+      );
+
+    case 'image_block':
+      return (
+        <div className="space-y-4">
+          <ImageSlot
+            label="이미지"
+            url={data.imageUrl}
+            onGalleryPick={() => galleryPick?.('imageUrl')}
+            onClear={() => update('imageUrl', undefined)}
+          />
+          <Field label="캡션" value={data.caption} onChange={(v) => update('caption', v)} />
+        </div>
+      );
+
+    case 'video_block':
+      return (
+        <div className="space-y-4">
+          <ImageSlot
+            label="동영상"
+            url={data.videoUrl}
+            onGalleryPick={() => galleryPick?.('videoUrl')}
+            onClear={() => update('videoUrl', undefined)}
+          />
+          <Field label="캡션" value={data.caption} onChange={(v) => update('caption', v)} />
+        </div>
       );
 
     default:
@@ -515,12 +656,35 @@ function ArrayField({ label, items, fields, onUpdate, onAdd, onRemove }: {
               {fields.map((f) => (
                 <div key={f.key}>
                   <label className="text-[10px] text-gray-400">{f.label}</label>
-                  <input
-                    type={f.type || 'text'}
-                    className="input text-xs mt-0.5"
-                    value={item[f.key] || ''}
-                    onChange={(e) => onUpdate(i, f.key, e.target.value)}
-                  />
+                  {f.key === 'icon' ? (
+                    <div>
+                      <input
+                        type="text"
+                        className="input text-xs mt-0.5"
+                        value={item[f.key] || ''}
+                        onChange={(e) => onUpdate(i, f.key, e.target.value)}
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {EMOJI_PRESETS.map(em => (
+                          <button
+                            key={em}
+                            type="button"
+                            onClick={() => onUpdate(i, f.key, em)}
+                            className="w-7 h-7 text-sm rounded border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                          >
+                            {em}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <input
+                      type={f.type || 'text'}
+                      className="input text-xs mt-0.5"
+                      value={item[f.key] || ''}
+                      onChange={(e) => onUpdate(i, f.key, e.target.value)}
+                    />
+                  )}
                 </div>
               ))}
             </div>

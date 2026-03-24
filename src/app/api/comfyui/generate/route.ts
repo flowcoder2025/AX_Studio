@@ -43,7 +43,13 @@ export async function POST(req: NextRequest) {
 
     // Download output images
     const outputPaths: string[] = [];
-    const outDir = outputDir || path.join(process.cwd(), 'output', 'temp');
+    const defaultOutDir = path.join(process.cwd(), 'output', 'temp');
+    const outputRoot = path.resolve(process.cwd(), 'output');
+    let outDir = defaultOutDir;
+    if (outputDir) {
+      const resolved = path.resolve(process.cwd(), outputDir);
+      outDir = resolved.startsWith(outputRoot) ? resolved : defaultOutDir;
+    }
     await fs.mkdir(outDir, { recursive: true });
 
     for (const img of result.images) {

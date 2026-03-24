@@ -33,11 +33,15 @@ export class ComfyUIClient {
 
   // Queue a workflow prompt
   async queuePrompt(workflow: Record<string, any>): Promise<QueueResponse> {
+    // Remove _meta before sending — ComfyUI treats it as a node and errors
+    const clean = { ...workflow };
+    delete clean._meta;
+
     const res = await fetch(`${COMFYUI_URL}/prompt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        prompt: workflow,
+        prompt: clean,
         client_id: this.clientId,
       }),
     });
@@ -139,13 +143,19 @@ export class ComfyUIClient {
     return Buffer.from(await res.arrayBuffer());
   }
 
-  // Load a workflow JSON template
+  private workflowCache = new Map<string, Record<string, any>>();
+
+  // Load a workflow JSON template (캐싱 — 매번 디스크 I/O 방지)
   async loadWorkflow(workflowName: string): Promise<Record<string, any>> {
-    const workflowPath = path.join(
-      process.cwd(), 'src', 'lib', 'comfyui', 'workflows', `${workflowName}.json`
-    );
-    const content = await fs.readFile(workflowPath, 'utf-8');
-    return JSON.parse(content);
+    if (!this.workflowCache.has(workflowName)) {
+      const workflowPath = path.join(
+        process.cwd(), 'src', 'lib', 'comfyui', 'workflows', `${workflowName}.json`
+      );
+      const content = await fs.readFile(workflowPath, 'utf-8');
+      this.workflowCache.set(workflowName, JSON.parse(content));
+    }
+    // 깊은 복사 반환 (원본 캐시 보호)
+    return JSON.parse(JSON.stringify(this.workflowCache.get(workflowName)!));
   }
 
   // Check if ComfyUI server is running

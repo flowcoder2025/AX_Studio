@@ -9,8 +9,8 @@
     "class_type": "ImageResizeKJ",
     "inputs": {
       "image": ["1", 0],
-      "width": 256,
-      "height": 256,
+      "width": 576,
+      "height": 576,
       "upscale_method": "lanczos",
       "keep_proportion": true,
       "divisible_by": 1
@@ -19,26 +19,19 @@
   "3": {
     "class_type": "ImageOnlyCheckpointLoader",
     "inputs": {
-      "ckpt_name": "stable_zero123.ckpt"
-    }
-  },
-  "4": {
-    "class_type": "CLIPVisionLoader",
-    "inputs": {
-      "clip_name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+      "ckpt_name": "sv3d_p.safetensors"
     }
   },
   "5": {
-    "class_type": "StableZero123_Conditioning",
+    "class_type": "SV3D_Conditioning",
     "inputs": {
       "clip_vision": ["3", 1],
       "init_image": ["2", 0],
       "vae": ["3", 2],
-      "width": 256,
-      "height": 256,
-      "batch_size": 6,
-      "elevation": 15.0,
-      "azimuth": 0.0
+      "width": 576,
+      "height": 576,
+      "video_frames": 21,
+      "elevation": 10.0
     }
   },
   "6": {
@@ -48,9 +41,9 @@
       "positive": ["5", 0],
       "negative": ["5", 1],
       "latent_image": ["5", 2],
-      "seed": -1,
-      "steps": 75,
-      "cfg": 4.0,
+      "seed": 0,
+      "steps": 25,
+      "cfg": 3.0,
       "sampler_name": "euler",
       "scheduler": "sgm_uniform",
       "denoise": 1.0
@@ -85,19 +78,8 @@
       "filename_prefix": "rotate360_frames"
     }
   },
-  "31": {
-    "class_type": "SaveAnimatedWEBP",
-    "inputs": {
-      "images": ["20", 0],
-      "filename_prefix": "rotate360_preview",
-      "fps": 12,
-      "lossless": false,
-      "quality": 85,
-      "method": "default"
-    }
-  },
   "_meta": {
-    "name": "360° Product Rotation",
+    "name": "360° Product Rotation (SV3D)",
     "ax_studio": {
       "workflow_id": "rotate-360",
       "input_nodes": {
@@ -106,10 +88,9 @@
         "seed": "6"
       },
       "output_nodes": {
-        "frames": "30",
-        "preview_webp": "31"
+        "frames": "30"
       },
-      "notes": "stable_zero123.ckpt 모델 필요. 미설치 시 Kling API fallback 사용."
+      "notes": "sv3d_p.safetensors 사용. 21프레임 생성 → RIFE 4x 보간 → 84프레임 → FFmpeg MP4."
     }
   }
 }

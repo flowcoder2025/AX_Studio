@@ -6,7 +6,8 @@ export type BlockType =
   | 'video_360' | 'video_demo' | 'video_ba' | 'video_short'
   | 'compare' | 'certification' | 'cta'
   | 'size_guide' | 'styling' | 'compatibility' | 'unboxing'
-  | 'recipe' | 'pricing' | 'process' | 'material';
+  | 'recipe' | 'pricing' | 'process' | 'material'
+  | 'image_block' | 'video_block';
 
 export type DataSource = 'claude' | 'comfyui' | 'ffmpeg' | 'puppeteer' | 'user';
 
@@ -15,7 +16,7 @@ export interface BlockDefinition {
   type: BlockType;
   order: number;
   source: DataSource;
-  data: BlockData;
+  data: BlockData | Record<string, never>;
   images: string[];
   videos: string[];
   visible: boolean;
@@ -29,7 +30,9 @@ export type BlockData =
   | IngredientData | TrustData | ReviewData | SpecData
   | FAQData | HowtoData | VideoData | CompareData
   | CertificationData | CTAData | SizeGuideData
-  | CompatibilityData | RecipeData | PricingData;
+  | CompatibilityData | RecipeData | PricingData
+  | ImageBlockData | VideoBlockData
+  | StylingData | UnboxingData | ProcessData | MaterialData;
 
 export interface HeroData {
   headline: string;
@@ -138,4 +141,36 @@ export interface PricingData {
     features: string[];
     featured?: boolean;
   }[];
+}
+
+export interface ImageBlockData {
+  imageUrl?: string;
+  caption?: string;
+  galleryItemId?: string;
+}
+
+export interface VideoBlockData {
+  videoUrl?: string;
+  caption?: string;
+  galleryItemId?: string;
+}
+
+export interface StylingData {
+  title?: string;
+  images?: string[];
+}
+
+export interface UnboxingData {
+  items?: { name: string; imageUrl?: string }[];
+}
+
+export interface ProcessData {
+  title?: string;
+  steps?: { title: string; description?: string; imageUrl?: string }[];
+}
+
+export interface MaterialData {
+  title?: string;
+  materials?: { name: string; description: string }[];
+  imageUrl?: string;
 }

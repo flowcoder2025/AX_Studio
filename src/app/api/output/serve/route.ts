@@ -19,12 +19,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'path parameter required' }, { status: 400 });
   }
 
+  // 입력값이 output/ 접두사로 시작하도록 강제
+  if (!filePath.startsWith('output/') && !filePath.startsWith('output\\')) {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
+
   // Resolve to absolute path under output/
   const resolved = path.resolve(process.cwd(), filePath);
   const outputRoot = path.resolve(process.cwd(), 'output');
 
   // Security: only serve files under output/ directory
-  if (!resolved.startsWith(outputRoot)) {
+  if (!resolved.startsWith(outputRoot + path.sep) && resolved !== outputRoot) {
     return NextResponse.json({ error: 'Access denied' }, { status: 403 });
   }
 

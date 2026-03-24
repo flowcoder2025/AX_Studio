@@ -1,8 +1,8 @@
 import { PainpointData, SolutionData } from '@/types/block';
 
 export function PainpointBlock({ data }: { data: PainpointData }) {
-  const items: string[] = data.painpoints
-    || ((data as any).items || []).map((it: any) => typeof it === 'string' ? it : it.description || it.title || '');
+  const raw = data.painpoints || (data as any).points || (data as any).items || [];
+  const items: string[] = raw.map((it: any) => typeof it === 'string' ? it : it.text || it.description || it.title || '');
   return (
     <section className="px-6 py-8">
       <h2 className="text-[17px] font-medium mb-4">{data.title || '이런 고민 있으시죠?'}</h2>

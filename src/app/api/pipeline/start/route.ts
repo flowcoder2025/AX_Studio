@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create project in DB
+    // Create project in DB (input_data 포함)
     const projectId = uuid();
-    db.createProject(projectId, input.productName, input.category, input.mode);
+    db.createProject(projectId, input.productName, input.category, input.mode, input);
 
     // Create pipeline run
     const pipelineId = createPipeline(projectId);

@@ -7,22 +7,10 @@
     }
   },
   "2": {
-    "class_type": "BriaRemoveImageBackground",
+    "class_type": "InspyrenetRembg",
     "inputs": {
       "image": ["1", 0],
-      "moderation": "disabled",
-      "seed": 0
-    }
-  },
-  "3": {
-    "class_type": "ImageCompositeMasked",
-    "inputs": {
-      "destination": ["1", 0],
-      "source": ["1", 0],
-      "mask": ["2", 1],
-      "x": 0,
-      "y": 0,
-      "resize_source": false
+      "torchscript_jit": "default"
     }
   },
   "4": {
@@ -37,7 +25,7 @@
     "ax_studio": {
       "workflow_id": "rmbg",
       "input_nodes": {"image": "1"},
-      "output_nodes": {"image": "4", "mask": "2"}
+      "output_nodes": {"image": "4"}
     }
   }
 }

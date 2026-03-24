@@ -39,6 +39,7 @@ db.exec(`
     images TEXT DEFAULT '[]',
     videos TEXT DEFAULT '[]',
     visible INTEGER NOT NULL DEFAULT 1,
+    multi_lang_data TEXT,
     created_at INTEGER NOT NULL DEFAULT (unixepoch()),
     updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -81,12 +82,41 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_outputs_project ON outputs(project_id);
 `);
 
+// Migration: 기존 DB에 multi_lang_data 컬럼이 없으면 추가
+try {
+  db.exec(`ALTER TABLE blocks ADD COLUMN multi_lang_data TEXT`);
+} catch {
+  // 이미 존재하면 무시
+}
+
+// Gallery items 테이블 (생성소 결과물)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS gallery_items (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    workflow TEXT NOT NULL,
+    prompt_ko TEXT,
+    prompt_en TEXT,
+    file_path TEXT NOT NULL,
+    file_size INTEGER DEFAULT 0,
+    width INTEGER,
+    height INTEGER,
+    assigned_block_id TEXT,
+    assigned_field TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_gallery_project ON gallery_items(project_id);
+`);
+
 // === Project CRUD ===
 
-export function createProject(id: string, name: string, category: string, mode: string): void {
+export function createProject(id: string, name: string, category: string, mode: string, inputData?: any): void {
   db.prepare(
-    `INSERT INTO projects (id, name, category, mode) VALUES (?, ?, ?, ?)`
-  ).run(id, name, category, mode);
+    `INSERT INTO projects (id, name, category, mode, input_data) VALUES (?, ?, ?, ?, ?)`
+  ).run(id, name, category, mode, JSON.stringify(inputData || {}));
 }
 
 export function getProject(id: string) {
@@ -114,8 +144,8 @@ export function deleteProject(id: string): void {
 export function saveBlocks(projectId: string, blocks: any[]): void {
   const del = db.prepare(`DELETE FROM blocks WHERE project_id = ?`);
   const ins = db.prepare(
-    `INSERT INTO blocks (id, project_id, type, sort_order, source, data, images, videos, visible)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO blocks (id, project_id, type, sort_order, source, data, images, videos, visible, multi_lang_data)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   const tx = db.transaction(() => {
@@ -124,7 +154,8 @@ export function saveBlocks(projectId: string, blocks: any[]): void {
       ins.run(
         b.id, projectId, b.type, b.order, b.source,
         JSON.stringify(b.data), JSON.stringify(b.images),
-        JSON.stringify(b.videos), b.visible ? 1 : 0
+        JSON.stringify(b.videos), b.visible ? 1 : 0,
+        b.multiLangData ? JSON.stringify(b.multiLangData) : null
       );
     }
   });
@@ -145,6 +176,7 @@ export function getBlocks(projectId: string) {
     images: JSON.parse(r.images || '[]'),
     videos: JSON.parse(r.videos || '[]'),
     visible: r.visible === 1,
+    ...(r.multi_lang_data ? { multiLangData: JSON.parse(r.multi_lang_data) } : {}),
   }));
 }
 
@@ -185,6 +217,10 @@ export function getPipelineRun(id: string) {
 // === Outputs ===
 
 export function saveOutput(id: string, projectId: string, type: string, platform: string | null, filePath: string, fileSize: number): void {
+  // 동일 project+type+platform 레코드가 있으면 교체
+  db.prepare(
+    `DELETE FROM outputs WHERE project_id = ? AND type = ? AND (platform = ? OR (platform IS NULL AND ? IS NULL))`
+  ).run(projectId, type, platform, platform);
   db.prepare(
     `INSERT INTO outputs (id, project_id, type, platform, file_path, file_size)
      VALUES (?, ?, ?, ?, ?, ?)`
@@ -213,6 +249,74 @@ export function getTemplate(id: string) {
 
 export function deleteTemplate(id: string): void {
   db.prepare('DELETE FROM templates WHERE id = ?').run(id);
+}
+
+// === Gallery ===
+
+export interface GalleryItem {
+  id: string;
+  project_id: string;
+  type: 'image' | 'video';
+  workflow: string;
+  prompt_ko: string | null;
+  prompt_en: string | null;
+  file_path: string;
+  file_size: number;
+  width: number | null;
+  height: number | null;
+  assigned_block_id: string | null;
+  assigned_field: string | null;
+  created_at: number;
+}
+
+export function createGalleryItem(
+  id: string,
+  projectId: string,
+  type: 'image' | 'video',
+  workflow: string,
+  promptKo: string | null,
+  promptEn: string | null,
+  filePath: string,
+  fileSize: number,
+  width?: number,
+  height?: number
+): void {
+  db.prepare(
+    `INSERT INTO gallery_items (id, project_id, type, workflow, prompt_ko, prompt_en, file_path, file_size, width, height)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, projectId, type, workflow, promptKo, promptEn, filePath, fileSize, width || null, height || null);
+}
+
+export function listGalleryItems(projectId: string): GalleryItem[] {
+  return db.prepare(
+    `SELECT * FROM gallery_items WHERE project_id = ? ORDER BY created_at DESC`
+  ).all(projectId) as GalleryItem[];
+}
+
+export function getGalleryItem(id: string): GalleryItem | undefined {
+  return db.prepare(`SELECT * FROM gallery_items WHERE id = ?`).get(id) as GalleryItem | undefined;
+}
+
+export function assignGalleryItem(id: string, blockId: string, field: string): void {
+  // 같은 블록+필드에 이미 배정된 항목이 있으면 해제
+  db.prepare(
+    `UPDATE gallery_items SET assigned_block_id = NULL, assigned_field = NULL
+     WHERE assigned_block_id = ? AND assigned_field = ?`
+  ).run(blockId, field);
+  // 새 배정
+  db.prepare(
+    `UPDATE gallery_items SET assigned_block_id = ?, assigned_field = ? WHERE id = ?`
+  ).run(blockId, field, id);
+}
+
+export function unassignGalleryItem(id: string): void {
+  db.prepare(
+    `UPDATE gallery_items SET assigned_block_id = NULL, assigned_field = NULL WHERE id = ?`
+  ).run(id);
+}
+
+export function deleteGalleryItem(id: string): void {
+  db.prepare(`DELETE FROM gallery_items WHERE id = ?`).run(id);
 }
 
 export default db;

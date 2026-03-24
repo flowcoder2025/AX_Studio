@@ -2,13 +2,23 @@
 
 import { useState, useEffect } from 'react';
 
+interface RecentProject {
+  id: string;
+  name: string;
+  category: string;
+  status: string;
+  updated_at: number;
+}
+
 export default function Dashboard() {
   const [claudeConnected, setClaudeConnected] = useState(false);
   const [comfyuiConnected, setComfyuiConnected] = useState(false);
   const [ffmpegConnected, setFfmpegConnected] = useState(false);
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
 
   useEffect(() => {
     checkServices();
+    loadRecentProjects();
   }, []);
 
   async function checkServices() {
@@ -29,6 +39,16 @@ export default function Dashboard() {
       const data = await res.json();
       setFfmpegConnected(data.available);
     } catch { setFfmpegConnected(false); }
+  }
+
+  async function loadRecentProjects() {
+    try {
+      const res = await fetch('/api/projects');
+      if (res.ok) {
+        const data = await res.json();
+        setRecentProjects((data.projects || []).slice(0, 5));
+      }
+    } catch {}
   }
 
   return (
@@ -80,11 +100,25 @@ export default function Dashboard() {
 
       {/* Recent Projects */}
       <h3 className="text-lg font-medium mb-4">최근 프로젝트</h3>
-      <div className="card">
-        <p className="text-sm text-gray-400 text-center py-8">
-          아직 프로젝트가 없습니다. 위에서 새 프로젝트를 시작해보세요.
-        </p>
-      </div>
+      {recentProjects.length > 0 ? (
+        <div className="space-y-2">
+          {recentProjects.map((p) => (
+            <a key={p.id} href={`/projects/${p.id}`} className="card flex items-center gap-3 hover:border-gray-300 transition-colors">
+              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.status === 'complete' ? 'bg-green-500' : p.status === 'error' ? 'bg-red-400' : 'bg-amber-400'}`} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{p.name}</p>
+                <p className="text-[11px] text-gray-400">{p.category} · {new Date(p.updated_at * 1000).toLocaleDateString('ko')}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div className="card">
+          <p className="text-sm text-gray-400 text-center py-8">
+            아직 프로젝트가 없습니다. 위에서 새 프로젝트를 시작해보세요.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

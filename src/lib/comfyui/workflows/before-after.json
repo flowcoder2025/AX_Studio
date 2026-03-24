@@ -50,28 +50,24 @@
     }
   },
   "10": {
-    "class_type": "IPAdapterModelLoader",
+    "class_type": "IPAdapterUnifiedLoader",
     "inputs": {
-      "ipadapter_file": "ip-adapter-plus_sdxl_vit-h.safetensors"
-    }
-  },
-  "11": {
-    "class_type": "CLIPVisionLoader",
-    "inputs": {
-      "clip_name": "CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors"
+      "model": ["1", 0],
+      "preset": "PLUS (high strength)"
     }
   },
   "12": {
-    "class_type": "IPAdapter",
+    "class_type": "IPAdapterAdvanced",
     "inputs": {
-      "ipadapter": ["10", 0],
-      "clip_vision": ["11", 0],
+      "model": ["10", 0],
+      "ipadapter": ["10", 1],
       "image": ["6", 0],
-      "model": ["1", 0],
-      "weight": 0.7,
-      "weight_type": "standard",
+      "weight": 0.85,
+      "weight_type": "linear",
+      "combine_embeds": "concat",
       "start_at": 0.0,
-      "end_at": 0.8
+      "end_at": 0.95,
+      "embeds_scaling": "V only"
     }
   },
   "13": {
@@ -93,7 +89,7 @@
       "cfg": 7.0,
       "sampler_name": "euler_ancestral",
       "scheduler": "normal",
-      "denoise": 0.85
+      "denoise": 0.45
     }
   },
   "15": {
@@ -125,8 +121,7 @@
         "before_prompt": "2",
         "after_prompt": "13",
         "negative_prompt": "3",
-        "seed": "5",
-        "ip_adapter_weight": "12"
+        "seed": "5"
       },
       "output_nodes": {
         "before_image": "20",

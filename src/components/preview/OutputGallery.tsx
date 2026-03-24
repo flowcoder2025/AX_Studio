@@ -51,7 +51,7 @@ function OutputSection({ title, items, projectId }: { title: string; items: Outp
         {items.map(item => (
           <a
             key={item.id}
-            href={`/api/output/download?id=${projectId}&type=${item.type}&platform=${item.platform || ''}`}
+            href={`/api/output/download?id=${projectId}&type=${item.type}${item.type === 'video' && item.platform ? `&videoType=${item.platform}` : item.platform ? `&platform=${item.platform}` : ''}`}
             className="border border-gray-200 rounded-lg hover:border-blue-300 transition-colors p-3 block"
           >
             <div className="flex items-center gap-2 mb-1">

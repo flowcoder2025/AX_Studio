@@ -147,7 +147,7 @@ async function generate360(outDir: string, tempDir: string, inputImage: string |
 
 // === Workflow 2: Feature Demo ===
 async function generateDemo(outDir: string, tempDir: string, inputImage: string | undefined, script: any): Promise<string> {
-  const outputPath = path.join(outDir, 'feature_demo.mp4');
+  const outputPath = path.join(outDir, 'demo.mp4');
   const clips: ffmpeg.ConcatInput[] = [];
 
   const comfyOk = await comfyui.healthCheck();
@@ -159,16 +159,20 @@ async function generateDemo(outDir: string, tempDir: string, inputImage: string 
     const clipPath = path.join(tempDir, `demo_clip_${i}.mp4`);
 
     if (comfyOk) {
-      // Generate scene background via SDXL
-      const bgWf = await comfyui.loadWorkflow('feature-demo');
-      injectPrompt(bgWf, '3', scene.backgroundPrompt || 'modern lifestyle scene, soft lighting');
-
-      if (inputImage) {
-        const uploaded = await comfyui.uploadImage(inputImage);
-        injectLoadImage(bgWf, uploaded.name);
+      // 배경만 생성 (Flux 우선, SDXL fallback)
+      let bgResult;
+      const bgPromptText = scene.backgroundPrompt || 'clean neutral surface, soft studio lighting, minimalist';
+      try {
+        const fluxWf = await comfyui.loadWorkflow('bg-flux');
+        injectPrompt(fluxWf, '4', bgPromptText);
+        if (fluxWf['5']?.inputs) { fluxWf['5'].inputs.width = 1024; fluxWf['5'].inputs.height = 1024; }
+        bgResult = await runWorkflow(fluxWf);
+      } catch {
+        const sdxlWf = await comfyui.loadWorkflow('background');
+        injectPrompt(sdxlWf, '2', bgPromptText);
+        if (sdxlWf['4']?.inputs) { sdxlWf['4'].inputs.width = 1024; sdxlWf['4'].inputs.height = 1024; }
+        bgResult = await runWorkflow(sdxlWf);
       }
-
-      const bgResult = await runWorkflow(bgWf);
 
       // If Kling available, generate motion
       if (klingOk && bgResult.images[0]) {
@@ -196,7 +200,7 @@ async function generateDemo(outDir: string, tempDir: string, inputImage: string 
           );
           const framePath = path.join(tempDir, `static_${i}.png`);
           await fs.writeFile(framePath, buf);
-          await ffmpeg.framesToVideo(framePath, clipPath, 1, { crf: 20 });
+          await ffmpeg.framesToVideo(framePath, clipPath, 30, { crf: 20, duration: scene.duration || 4 });
         }
       }
     }
@@ -300,8 +304,8 @@ async function generateBeforeAfter(outDir: string, tempDir: string, script: any)
     const holdAfter = path.join(tempDir, 'hold_after.mp4');
 
     // Create 2s holds from static images
-    await ffmpeg.framesToVideo(beforePath, holdBefore, 1, { crf: 20 });
-    await ffmpeg.framesToVideo(afterPath, holdAfter, 1, { crf: 20 });
+    await ffmpeg.framesToVideo(beforePath, holdBefore, 30, { crf: 20, duration: 3 });
+    await ffmpeg.framesToVideo(afterPath, holdAfter, 30, { crf: 20, duration: 3 });
 
     // Add labels
     const labeledBefore = path.join(tempDir, 'lb.mp4');
@@ -378,7 +382,7 @@ async function generateShortform(outDir: string, tempDir: string, script: any, i
 
     // Create video from background (or solid color)
     if (bgPath) {
-      await ffmpeg.framesToVideo(bgPath, clipPath, 1, { crf: 20 });
+      await ffmpeg.framesToVideo(bgPath, clipPath, 30, { crf: 20, duration: dur });
     } else {
       // Solid dark background
       const { execFile } = await import('child_process');

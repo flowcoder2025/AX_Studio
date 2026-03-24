@@ -12,9 +12,10 @@
 ### 사전 요구사항
 
 - **Node.js** 18+
-- **ComfyUI** — port 8000에서 API 모드로 실행
-- **FFmpeg** — 시스템 PATH에 등록 또는 .env에 경로 지정
-- **Claude OAuth** — Anthropic Console에서 OAuth 앱 등록
+- **Claude Code CLI** — Max 구독 + `claude` 명령어가 시스템 PATH에 등록
+- **ComfyUI** — port 8000에서 API 모드로 실행 (선택 — 미연결 시 이미지/영상 생성 건너뜀)
+- **FFmpeg** — 시스템 PATH에 등록 또는 .env에 경로 지정 (선택 — 미설치 시 영상 기능 비활성화)
+- **Kling API** — API 키 (선택 — 미설정 시 영상 생성 건너뜀)
 
 ### 셋업
 
@@ -24,7 +25,7 @@ npm install
 
 # 2. 환경변수 설정
 cp .env.example .env.local
-# .env.local 편집 → OAuth 키, ComfyUI URL 등 설정
+# .env.local 편집 → ComfyUI URL, Kling API 키 등 설정
 
 # 3. 개발 서버 시작
 npm run dev
@@ -52,13 +53,17 @@ python main.py --listen 0.0.0.0 --port 8000
 ```
 ┌──────────────────── Windows Local (localhost) ────────────────────┐
 │                                                                    │
-│  Next.js UI (3000) → Pipeline Engine (Node.js) → Output Manager   │
-│                           │                                        │
-│         ┌─────────────────┼─────────────────┐                     │
-│         ▼                 ▼                  ▼                     │
-│   Claude OAuth      ComfyUI (8000)      Puppeteer                 │
-│                           │                                        │
-│                        FFmpeg                                      │
+│  Next.js UI (3000)                                                 │
+│  ├── 블록 편집 탭 ── 카피 파이프라인 ── Claude CLI (분석/카피)     │
+│  ├── 생성소 탭 ──── 이미지/영상 생성 ── ComfyUI (8000)            │
+│  │                                       ├── Flux T2I (제품 이미지)│
+│  │                                       ├── SV3D (360° 회전)     │
+│  │                                       ├── RMBG (배경 제거)      │
+│  │                                       └── FFmpeg (영상 후처리)  │
+│  ├── 미리보기 탭 ── 블록 렌더링                                    │
+│  └── 출력 탭 ───── Puppeteer (HTML→이미지)                        │
+│                                                                    │
+│  SQLite DB: projects, blocks, gallery_items, pipeline_runs, ...   │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -67,23 +72,23 @@ python main.py --listen 0.0.0.0 --port 8000
 | 레이어 | 기술 | 포트/비고 |
 |--------|------|-----------|
 | Frontend | Next.js 14+ (App Router) | port 3000 |
-| Backend API | Next.js API Routes | /api/* (17개 라우트) |
-| AI 카피/분석 | Claude (OAuth 2.0) | OAuth 토큰 인증, SQLite 영속 |
-| 이미지 생성 | ComfyUI (API mode) | port 8000 |
-| 영상 생성 | Kling API + ComfyUI | Kling 1.6 |
-| HTML→이미지 | Puppeteer | Chromium 스크린샷 |
-| 영상 후처리 | FFmpeg | Windows 바이너리 |
-| 상태 관리 | Zustand | 클라이언트 상태 |
-| DB | SQLite (better-sqlite3) | 프로젝트/블록/토큰 영속 |
+| Backend API | Next.js API Routes | /api/* (카피 파이프라인 + 생성소 Studio API) |
+| AI 카피/분석 | Claude Code CLI (spawn) | Max 구독, `--print --output-format json` |
+| 이미지 생성 | ComfyUI (REST + WebSocket) | port 8000, 선택 |
+| 영상 생성 | Kling API + ComfyUI + FFmpeg | Kling 1.6, 선택 |
+| HTML→이미지 | Puppeteer | Chromium 풀페이지 스크린샷 |
+| 영상 후처리 | FFmpeg (child_process) | Windows 바이너리 |
+| DB | SQLite (better-sqlite3) | WAL 모드, 7개 테이블 (gallery_items 추가) |
 
-### Claude OAuth 인증 흐름
+### Claude CLI 연동 방식
 
-1. UI에서 "Claude 연결" 클릭
-2. Anthropic OAuth 서버 리다이렉트 (Authorization Code)
-3. 사용자 승인 → `/api/auth/callback`
-4. Authorization Code → Access Token 교환 (서버사이드)
-5. SQLite에 토큰 영속 저장
-6. 만료 60초 전 Refresh Token으로 자동 갱신
+로컬에 설치된 Claude Code CLI를 `child_process.spawn`으로 호출하는 프록시 방식:
+
+1. `claude --print --output-format json --max-turns 1` 실행
+2. stdin으로 프롬프트 전달 (쉘 이스케이프 이슈 방지)
+3. stdout에서 JSON 응답 파싱, 실패 시 원문 텍스트 사용
+4. 타임아웃 120초, 인증 상태는 `claude --version` 실행 성공 여부로 확인
+5. OAuth 토큰 교환 없음 — Max 구독의 CLI 인증에 의존
 
 ---
 
@@ -241,8 +246,9 @@ Claude → JSON 스크립트 [{scene, text, kpiValue, animation, duration}]
 ## 7. 출력 시스템
 
 ### HTML 상세페이지
-- 블록 HTML 컴포넌트 조합, 반응형 (max-width 640px)
-- 영상: `<video>` inline, 이미지: WebP, 폰트: Pretendard + Inter
+- 서버사이드 `blockToHtml()` 함수로 블록별 HTML 생성, 반응형 (max-width 640px)
+- 영상 블록은 현재 placeholder 출력 (`<video>` 태그 미구현)
+- 폰트: Pretendard (CDN), CSS inline 스타일
 
 ### 이미지 상세페이지 (긴 이미지)
 - Puppeteer HTML → 풀페이지 스크린샷
@@ -255,18 +261,20 @@ Claude → JSON 스크립트 [{scene, text, kpiValue, animation, duration}]
 
 ---
 
-## 8. API 라우트 (17개)
+## 8. API 라우트 (24개)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | /api/auth/callback | OAuth 인증/콜백 |
-| GET | /api/auth/token | 인증 상태 확인 |
+| GET | /api/auth/callback | 인증 콜백 (현재 리다이렉트만) |
+| GET | /api/auth/token | Claude CLI 인증 상태 확인 |
 | GET/POST | /api/projects | 프로젝트 목록/생성 |
-| GET/DELETE | /api/projects/[id] | 프로젝트 상세/삭제 |
+| GET/DELETE | /api/projects/[id] | 프로젝트 상세(블록+출력 포함)/삭제 |
 | GET/PUT | /api/projects/[id]/blocks | 블록 조회/저장 |
-| POST | /api/pipeline/start | 파이프라인 시작 |
-| GET | /api/pipeline/status | 진행 상태 (SSE) |
+| POST | /api/projects/[id]/duplicate | 프로젝트 복제 |
+| POST | /api/pipeline/start | 파이프라인 시작 (비동기) |
+| GET | /api/pipeline/status | 진행 상태 (SSE, 500ms 폴링) |
 | POST | /api/pipeline/cancel | 파이프라인 취소 |
+| POST | /api/pipeline/remake | URL 리메이크 (스크래핑→분석→파이프라인) |
 | POST | /api/claude/analyze | 제품 분석 |
 | POST | /api/claude/copy | 카피 생성 |
 | POST | /api/claude/blocks | 블록 추천 |
@@ -275,7 +283,12 @@ Claude → JSON 스크립트 [{scene, text, kpiValue, animation, duration}]
 | GET | /api/comfyui/status | ComfyUI 헬스체크 |
 | POST | /api/render/html | HTML 상세페이지 생성 |
 | POST | /api/render/image | Puppeteer 이미지 렌더 |
-| GET | /api/output/download | 결과물 다운로드 |
+| GET | /api/output/download | 결과물 다운로드 (html/image/video) |
+| GET | /api/output/serve | 출력 파일 스트리밍 서빙 |
+| POST | /api/upload | 이미지 업로드 (FormData) |
+| POST | /api/parse/excel | 엑셀 스펙시트 파싱 (SheetJS + Claude) |
+| GET/POST | /api/templates | 템플릿 목록/저장 |
+| GET | /api/ffmpeg/status | FFmpeg 설치 여부 확인 |
 
 ---
 
@@ -291,30 +304,40 @@ ax-studio/
 │   │   ├── layout.tsx, page.tsx        # 레이아웃 + 대시보드
 │   │   ├── globals.css                 # Tailwind + 커스텀 스타일
 │   │   ├── projects/
-│   │   │   ├── page.tsx                # 프로젝트 목록 (DB 연동)
-│   │   │   └── [id]/page.tsx           # 편집 UI (드래그 정렬 + 미리보기)
-│   │   └── api/ (17 routes)
+│   │   │   ├── page.tsx                # 프로젝트 목록 + 생성 (3가지 모드)
+│   │   │   └── [id]/page.tsx           # 편집 UI (드래그 정렬 + 미리보기 + 출력)
+│   │   ├── services/page.tsx           # 서비스 상태 확인
+│   │   └── api/ (24 routes)
 │   ├── components/
 │   │   ├── blocks/ (9 files, 24 types) # 상세페이지 블록 컴포넌트
 │   │   ├── editor/
 │   │   │   ├── BlockSortable.tsx       # dnd-kit 드래그 정렬
-│   │   │   └── BlockEditor.tsx         # 블록 편집 모달 (타입별 폼)
-│   │   ├── preview/MobileFrame.tsx     # 모바일 미리보기 프레임
-│   │   └── ui/index.tsx                # Spinner, Badge, ProgressBar
+│   │   │   └── BlockEditor.tsx         # 블록 편집 모달 (타입별 폼 + JSON 모드)
+│   │   ├── preview/
+│   │   │   ├── MobileFrame.tsx         # 모바일 미리보기 프레임
+│   │   │   └── OutputGallery.tsx       # 출력 파일 갤러리 (HTML/이미지/영상)
+│   │   └── ui/
+│   │       ├── index.tsx               # Spinner, Badge, ProgressBar, EmptyState
+│   │       ├── Sidebar.tsx             # 네비게이션 + 서비스 상태 표시
+│   │       └── ImageUploader.tsx       # 드래그 드롭 이미지 업로드
 │   ├── lib/
-│   │   ├── claude/client.ts            # OAuth + API (토큰 DB 영속)
-│   │   ├── claude/prompts/index.ts     # 분석/카피/영상/블록 프롬프트
+│   │   ├── claude/client.ts            # CLI spawn 프록시 (Max 구독)
+│   │   ├── claude/prompts/index.ts     # 분석/카피/영상/블록/리메이크/엑셀 프롬프트
 │   │   ├── comfyui/client.ts           # ComfyUI API + WebSocket
 │   │   ├── comfyui/workflows/ (7 JSON) # ComfyUI 워크플로우
 │   │   ├── kling/client.ts             # Kling API (생성→폴링→다운로드)
 │   │   ├── ffmpeg/runner.ts            # 텍스트 오버레이, KPI, 합성
 │   │   ├── puppeteer/renderer.ts       # HTML→이미지, URL 스크래핑
-│   │   ├── pipeline/engine.ts          # 8단계 파이프라인 (재시도 포함)
+│   │   ├── comfyui/prompt-templates.ts  # 카테고리별 ComfyUI 프롬프트 템플릿
+│   │   ├── pipeline/engine.ts          # 7단계 파이프라인 (재시도 + SSE)
 │   │   ├── templates/categories.ts     # 14개 카테고리 정의
-│   │   ├── db/client.ts                # SQLite (5 테이블, 자동 생성)
-│   │   └── utils/retry.ts             # 지수 백오프 재시도 + 타임아웃
+│   │   ├── db/client.ts                # SQLite (6 테이블, WAL, 자동 생성)
+│   │   └── utils/
+│   │       ├── retry.ts                # 지수 백오프 재시도 + 타임아웃
+│   │       ├── excel-parser.ts         # SheetJS 엑셀 파싱
+│   │       └── image-downloader.ts     # URL 스크래핑 이미지 다운로드
 │   ├── types/ (block.ts, project.ts, pipeline.ts)
-│   └── store/project.ts               # Zustand 상태 관리
+│   └── store/project.ts               # Zustand 스토어 (현재 미사용, 페이지에서 로컬 state 직접 관리)
 ├── output/                             # 생성물 출력 디렉토리
 └── comfyui-workflows/                  # ComfyUI 원본 참고용
 ```
@@ -325,13 +348,13 @@ ax-studio/
 
 ### Phase 1 — Foundation (완료)
 - [x] Next.js + 폴더 구조 + 설정 파일
-- [x] SQLite DB (5 테이블 자동 생성)
-- [x] Claude OAuth 인증 (토큰 영속)
-- [x] ComfyUI API 클라이언트
-- [x] 기본 UI (대시보드, 사이드바)
+- [x] SQLite DB (6 테이블, WAL 모드, 자동 생성)
+- [x] Claude CLI 프록시 클라이언트 (spawn, Max 구독)
+- [x] ComfyUI API 클라이언트 (REST + WebSocket)
+- [x] 기본 UI (대시보드, 사이드바, 서비스 상태)
 
 ### Phase 2 — Core Pipeline (완료)
-- [x] 파이프라인 엔진 (8단계, 재시도, SSE)
+- [x] 파이프라인 엔진 (7단계, 재시도, SSE 500ms 폴링)
 - [x] Claude 제품 분석 + 카피 생성 + 블록 추천
 - [x] 14개 카테고리 블록 시스템
 - [x] 블록 드래그 정렬 에디터 (dnd-kit)
@@ -356,10 +379,31 @@ ax-studio/
 - [x] 프로젝트 CRUD (DB 연동)
 - [x] HTML/이미지/영상 내보내기
 
-### Phase 6 — 추가 개발 필요 (미구현)
-- [ ] URL 리메이크 모드 UI (Mode C 전용 입력 폼)
-- [ ] 이미지 업로드 UI (drag & drop)
-- [ ] 스펙시트 엑셀 파싱 (Mode B)
-- [ ] 출력물 갤러리 뷰
-- [ ] 프로젝트 복제/템플릿 저장
-- [ ] 다국어 지원 (영문/중문 카피)
+### Phase 6 — Extended Features (완료)
+- [x] URL 리메이크 모드 (Mode C — Puppeteer 스크래핑 → Claude 분석 → 파이프라인)
+- [x] 이미지 업로드 UI (drag & drop, ImageUploader 컴포넌트)
+- [x] 스펙시트 엑셀 파싱 (Mode B — SheetJS + Claude 구조화)
+- [x] 출력물 갤러리 뷰 (OutputGallery 컴포넌트, 프로젝트 "출력" 탭)
+- [x] 프로젝트 복제 + 템플릿 저장/불러오기
+- [x] 다국어 카피 (한국어/영어/중국어 선택, 문화 맞춤 생성)
+
+### Phase 7 — 파이프라인 분리 (완료)
+- [x] 카피 파이프라인과 이미지/영상 생성을 분리
+- [x] 카피 전용 engine.ts (881줄 → 222줄)
+- [x] 생성소(Studio) 탭 — 한글 프롬프트 → 영어 번역 → ComfyUI 워크플로우
+- [x] 갤러리 시스템 — 생성 결과 관리 + 블록 배정
+- [x] 블록 추가/삭제 UI
+- [x] Flux T2I 활성화 (Flux 우선, SDXL fallback)
+- [x] SV3D 360° 회전 워크플로우 (Zero123 대체)
+- [x] Zustand 스토어 제거, 데드코드 정리
+- [x] 대시보드 최근 프로젝트 DB 연동
+- [x] HTML 렌더링 전체 블록 타입 지원
+- [x] painpoint `text` 필드 fallback
+- [x] video 블록 `<video>` 태그 렌더링
+
+### Phase 8 — 향후 개선
+- [ ] 갤러리 드래그 앤 드롭으로 블록 배정
+- [ ] 생성 프롬프트 템플릿/즐겨찾기
+- [ ] Kling API 연동 (생성소 워크플로우)
+- [ ] 배치 이미지 생성 (한 번에 여러 프롬프트)
+- [ ] 블록 에디터 내 이미지/영상 슬롯 직접 교체
