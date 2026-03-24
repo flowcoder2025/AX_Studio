@@ -10,12 +10,8 @@ export function buildDetailPageHtml(
   opts?: { preview?: boolean }
 ): string {
   const blockHtmls = blocks.map(b => {
-    const s = (b.data as any)?.style;
+    const s = b.style;
     const styleAttr = s ? ` style="${[
-      s.fontSize ? `font-size:${s.fontSize}px` : '',
-      s.textAlign ? `text-align:${s.textAlign}` : '',
-      s.color ? `color:${s.color}` : '',
-      s.fontWeight ? `font-weight:${s.fontWeight}` : '',
       s.bgColor ? `background:${s.bgColor}` : '',
       s.padding ? `padding:${s.padding}px` : '',
     ].filter(Boolean).join(';')}"` : '';
@@ -106,16 +102,15 @@ function es(blockStyle: any, elementStyles: any, field: string, baseCSS?: string
   const elem = elementStyles?.[field] || {};
   const parts: string[] = [];
   if (baseCSS) parts.push(baseCSS);
-  // 블록 레벨 텍스트 속성
-  if (base.fontSize) parts.push(`font-size:${base.fontSize}px`);
-  if (base.textAlign) parts.push(`text-align:${base.textAlign}`);
-  if (base.color) parts.push(`color:${base.color}`);
-  if (base.fontWeight) parts.push(`font-weight:${base.fontWeight}`);
-  // 요소 레벨 오버라이드 (우선 — 동일 속성 덮어씀)
-  if (elem.fontSize) { parts.push(`font-size:${elem.fontSize}px`); }
-  if (elem.textAlign) { parts.push(`text-align:${elem.textAlign}`); }
-  if (elem.color) { parts.push(`color:${elem.color}`); }
-  if (elem.fontWeight) { parts.push(`font-weight:${elem.fontWeight}`); }
+  // 각 속성: 요소 레벨 우선, 없으면 블록 레벨
+  const fontSize = elem.fontSize || base.fontSize;
+  const textAlign = elem.textAlign || base.textAlign;
+  const color = elem.color || base.color;
+  const fontWeight = elem.fontWeight || base.fontWeight;
+  if (fontSize) parts.push(`font-size:${fontSize}px`);
+  if (textAlign) parts.push(`text-align:${textAlign}`);
+  if (color) parts.push(`color:${color}`);
+  if (fontWeight) parts.push(`font-weight:${fontWeight}`);
   if (parts.length === 0) return '';
   return ` style="${parts.join(';')}"`;
 }
@@ -127,19 +122,11 @@ export function blockToHtml(block: BlockDefinition, heroStyle: string, opts?: { 
     return `<div class="section"><div class="placeholder">${block.type} block</div></div>`;
   }
 
-  // 정규화는 page.tsx의 normalizeBlock에서 로드 시점에 처리됨
-  // 내보내기(서버) 경로를 위한 최소 fallback만 유지
-  const bStyle = raw.style || {};
-  const eStyles = raw.elementStyles || {};
+  // 정규화는 db/client.ts getBlocks에서 schema.ts 기반으로 처리
+  // style/elementStyles는 BlockDefinition 최상위 필드에서 읽기
+  const bStyle = block.style || {};
+  const eStyles = block.elementStyles || {};
   const d = { ...raw };
-  if (!d.painpoints && block.type === 'painpoint') { const src = d.points || d.items || []; d.painpoints = src.map((it: any) => typeof it === 'string' ? it : it.text || it.description || it.title || ''); }
-  if (!d.solutions && d.items && block.type === 'solution') { d.solutions = d.items; }
-  if (!d.features && d.items && block.type === 'feature') { d.features = d.items; }
-  if (!d.specs && d.items && block.type === 'spec') { d.specs = d.items; }
-  if (!d.faqs && d.items && block.type === 'faq') { d.faqs = d.items; }
-  if (!d.reviews && d.items && block.type === 'review') { d.reviews = d.items; }
-  if (!d.columns && d.headers && block.type === 'compare') { d.columns = d.headers; }
-  if (d.rows?.length && Array.isArray(d.rows[0]) && block.type === 'compare') { d.rows = d.rows.map((r: any) => ({ label: r[0] || '', values: r.slice(1) })); }
 
   switch (block.type) {
     case 'hero':
@@ -275,7 +262,7 @@ export function blockToHtml(block: BlockDefinition, heroStyle: string, opts?: { 
 
     case 'process':
       return `<div class="section">
-        <h2 class="h2"${ce(block.id, 'title', p)}>${d.title || '제조 공정'}</h2>
+        <h2 class="h2"${es(bStyle, eStyles, 'title')}${ce(block.id, 'title', p)}>${d.title || '제조 공정'}</h2>
         ${(d.steps || []).map((s: any, i: number) => `<div class="step-row"><div class="step-num" style="background:#e6f6f0;color:#0d9488">${i + 1}</div><div><p class="h3"${es(bStyle, eStyles, `steps.${i}.title`)}${ce(block.id, `steps.${i}.title`, p)}>${s.title}</p>${s.description ? `<p class="sub"${es(bStyle, eStyles, `steps.${i}.description`, 'margin-top:2px')}${ce(block.id, `steps.${i}.description`, p)}>${s.description}</p>` : ''}${s.imageUrl ? `<img src="${s.imageUrl}" style="width:100%;border-radius:8px;margin-top:8px">` : ''}</div></div>`).join('')}
       </div>`;
 

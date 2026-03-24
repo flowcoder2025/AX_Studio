@@ -13,42 +13,17 @@ import OutputGallery from '@/components/preview/OutputGallery';
 import { BlockDefinition, BlockType } from '@/types/block';
 import { CATEGORIES, CategoryId } from '@/lib/templates/categories';
 
-// DB에서 로드된 블록 데이터의 키를 정규화 — 편집/렌더링 양쪽에서 동일한 키 사용
-function normalizeBlock(block: BlockDefinition): BlockDefinition {
-  const d = block.data as any;
-  if (!d || typeof d !== 'object' || Object.keys(d).length === 0) return block;
-
-  const data = { ...d };
-  const type = block.type;
-
-  if (type === 'painpoint' && !data.painpoints) {
-    const src = data.points || data.items || [];
-    data.painpoints = src.map((it: any) => typeof it === 'string' ? it : it.text || it.description || it.title || '');
-    delete data.items; delete data.points;
-  }
-  if (type === 'solution' && !data.solutions && data.items) { data.solutions = data.items; delete data.items; }
-  if (type === 'feature' && !data.features && data.items) { data.features = data.items; delete data.items; }
-  if (type === 'spec' && !data.specs && data.items) { data.specs = data.items; delete data.items; }
-  if (type === 'faq' && !data.faqs && data.items) { data.faqs = data.items; delete data.items; }
-  if (type === 'review' && !data.reviews && data.items) { data.reviews = data.items; delete data.items; }
-  if ((type === 'ingredient' || type === 'tech') && !data.ingredients && data.items) { data.ingredients = data.items; delete data.items; }
-  if (type === 'compare' && !data.columns && data.headers) { data.columns = data.headers; delete data.headers; }
-
-  return { ...block, data };
-}
-
-// heroStyle 기반 기본 스타일을 블록에 적용 (style 미설정 시)
-function applyDefaultStyles(blocks: BlockDefinition[], heroStyle: string): BlockDefinition[] {
+// 정규화/스타일 추출은 db/client.ts getBlocks에서 처리 (schema.ts SSOT 기반)
+// hero 기본 스타일은 DB에서 로드 후 style이 없을 때만 적용
+function applyHeroDefaults(blocks: BlockDefinition[], heroStyle: string): BlockDefinition[] {
   return blocks.map(b => {
-    if (b.type === 'hero' && !(b.data as any)?.style?.bgColor) {
+    if (b.type === 'hero' && !b.style?.bgColor) {
       const isDark = heroStyle === 'dark';
-      const data = { ...(b.data as any) };
-      data.style = {
-        ...(data.style || {}),
-        bgColor: data.style?.bgColor || (isDark ? '#0a0a0a' : '#ffffff'),
-        color: data.style?.color || (isDark ? '#f5f5f5' : '#222222'),
-      };
-      return { ...b, data };
+      return { ...b, style: {
+        ...(b.style || {}),
+        bgColor: isDark ? '#0a0a0a' : '#ffffff',
+        color: isDark ? '#f5f5f5' : '#222222',
+      }};
     }
     return b;
   });
@@ -77,9 +52,12 @@ export default function ProjectDetailPage() {
   const [projectCategory, setProjectCategory] = useState('grooming');
   const [activeLanguage, setActiveLanguage] = useState<'ko' | 'en' | 'zh'>('ko');
   const [showAddBlock, setShowAddBlock] = useState(false);
-  const [showOverlay, setShowOverlay] = useState<'json' | 'output' | null>(null);
+  const [showOverlay, setShowOverlay] = useState<'json' | 'output' | 'templates' | null>(null);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [galleryPickerFor, setGalleryPickerFor] = useState<{ blockId: string; field: string } | null>(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [regenPrompt, setRegenPrompt] = useState('');
+  const [showRegenInput, setShowRegenInput] = useState(false);
   const [inlineEditing, setInlineEditing] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
 
@@ -91,23 +69,20 @@ export default function ProjectDetailPage() {
   const hasMultiLang = blocks.some(b => b.multiLangData);
   const selectedBlock = blocks.find(b => b.id === selectedBlockId) || null;
 
-  // 블록 선택 시 formData 동기화
-  useEffect(() => {
-    if (selectedBlock) {
-      setFormData(selectedBlock.data || {});
-      setJsonText(JSON.stringify(selectedBlock.data || {}, null, 2));
-      setJsonMode(false);
+  // 블록 선택 시 formData/style 동기화 (저장 없이 화면만 갱신)
+  function selectBlock(blockId: string | null) {
+    setSelectedBlockId(blockId);
+    setInlineEditing(false);
+    setEditingField(null);
+    if (blockId) {
+      const block = blocks.find(b => b.id === blockId);
+      if (block) {
+        setFormData(block.data || {});
+        setJsonText(JSON.stringify(block.data || {}, null, 2));
+        setJsonMode(false);
+      }
     }
-  }, [selectedBlockId]);
-
-  // formData 변경 시 실시간 반영
-  useEffect(() => {
-    if (selectedBlock && !jsonMode && Object.keys(formData).length > 0) {
-      const updated = blocks.map(b => b.id === selectedBlockId ? { ...b, data: formData } : b);
-      setBlocks(updated);
-      saveBlocks(updated);
-    }
-  }, [formData]);
+  }
 
   useEffect(() => {
     loadProject();
@@ -122,12 +97,12 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       if (e.data?.type === 'block-click') {
-        setSelectedBlockId(e.data.blockId || null);
-        setInlineEditing(false);
-        setEditingField(null);
+        selectBlock(e.data.blockId || null);
       }
       if (e.data?.type === 'text-focus') {
-        setSelectedBlockId(e.data.blockId || null);
+        // 텍스트 클릭 시 블록도 선택하되, inlineEditing 모드 활성화
+        const bid = e.data.blockId;
+        if (bid !== selectedBlockId) selectBlock(bid);
         setInlineEditing(true);
         setEditingField(e.data.field || null);
       }
@@ -136,7 +111,6 @@ export default function ProjectDetailPage() {
         const block = blocks.find(b => b.id === blockId);
         if (!block) return;
         const data = JSON.parse(JSON.stringify(block.data || {}));
-        // 중첩 경로 지원: "features.0.title" → data.features[0].title = value
         const parts = field.split('.');
         let target = data;
         for (let i = 0; i < parts.length - 1; i++) {
@@ -163,7 +137,7 @@ export default function ProjectDetailPage() {
         if (data.category) setProjectCategory(data.category);
         if (data.blocks?.length) {
           const cat = CATEGORIES[data.category as CategoryId];
-          setBlocks(applyDefaultStyles(data.blocks.map(normalizeBlock), cat?.heroStyle || 'dark'));
+          setBlocks(applyHeroDefaults(data.blocks, cat?.heroStyle || 'dark'));
         }
       }
     } catch {}
@@ -204,34 +178,72 @@ export default function ProjectDetailPage() {
     setBlocks(updated); saveBlocks(updated); setShowAddBlock(false);
   }
 
-  // 인라인 편집 함수들
-  function updateField(path: string, value: any) {
-    setFormData((prev: any) => {
-      const copy = { ...prev };
-      const keys = path.split('.');
-      let target = copy;
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!target[keys[i]]) target[keys[i]] = {};
-        target = target[keys[i]];
+  // 블록 레벨 스타일 변경 (style/elementStyles는 data 밖에 존재)
+  function updateBlockStyle(style: any) {
+    if (!selectedBlockId || !selectedBlock) return;
+    // 변경된 속성을 모든 elementStyles에서 제거 (캐스케이드)
+    const oldStyle = selectedBlock.style || {};
+    const changedKeys = Object.keys(style).filter(k => (style as any)[k] !== (oldStyle as any)[k]);
+    let newElementStyles = selectedBlock.elementStyles ? { ...selectedBlock.elementStyles } : undefined;
+    if (changedKeys.length > 0 && newElementStyles) {
+      for (const field of Object.keys(newElementStyles)) {
+        const copy = { ...newElementStyles[field] };
+        for (const ck of changedKeys) { delete (copy as any)[ck]; }
+        if (Object.keys(copy).length > 0) { newElementStyles[field] = copy; } else { delete newElementStyles[field]; }
       }
-      target[keys[keys.length - 1]] = value;
-      return copy;
-    });
+      if (Object.keys(newElementStyles).length === 0) newElementStyles = undefined;
+    }
+    const updated = blocks.map(b => b.id === selectedBlockId
+      ? { ...b, style: Object.keys(style).length > 0 ? style : undefined, elementStyles: newElementStyles }
+      : b);
+    setBlocks(updated); saveBlocks(updated);
+  }
+
+  function updateElementStyle(field: string, style: any) {
+    if (!selectedBlockId || !selectedBlock) return;
+    const es = { ...(selectedBlock.elementStyles || {}) };
+    if (Object.keys(style).length > 0) { es[field] = style; } else { delete es[field]; }
+    const updated = blocks.map(b => b.id === selectedBlockId
+      ? { ...b, elementStyles: Object.keys(es).length > 0 ? es : undefined }
+      : b);
+    setBlocks(updated); saveBlocks(updated);
+  }
+
+  // 편집 후 formData + blocks + saveBlocks를 원자적으로 처리하는 헬퍼
+  function commitFormData(newData: any) {
+    setFormData(newData);
+    if (!selectedBlockId) return;
+    const updated = blocks.map(b => b.id === selectedBlockId ? { ...b, data: newData } : b);
+    setBlocks(updated);
+    saveBlocks(updated);
+  }
+
+  // 인라인 편집 함수들 — useEffect 순환 없이 명시적 커밋
+  function updateField(path: string, value: any) {
+    const copy = JSON.parse(JSON.stringify(formData));
+    const keys = path.split('.');
+    let target = copy;
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (!target[keys[i]]) target[keys[i]] = {};
+      target = target[keys[i]];
+    }
+    target[keys[keys.length - 1]] = value;
+    commitFormData(copy);
   }
   function updateArrayItem(arrayPath: string, index: number, field: string, value: any) {
-    setFormData((prev: any) => {
-      const copy = { ...prev };
-      if (!copy[arrayPath]) copy[arrayPath] = [];
-      if (!copy[arrayPath][index]) copy[arrayPath][index] = {};
-      copy[arrayPath][index] = { ...copy[arrayPath][index], [field]: value };
-      return copy;
-    });
+    const copy = JSON.parse(JSON.stringify(formData));
+    if (!copy[arrayPath]) copy[arrayPath] = [];
+    if (!copy[arrayPath][index]) copy[arrayPath][index] = {};
+    copy[arrayPath][index] = { ...copy[arrayPath][index], [field]: value };
+    commitFormData(copy);
   }
   function addArrayItem(arrayPath: string, template: any) {
-    setFormData((prev: any) => ({ ...prev, [arrayPath]: [...(prev[arrayPath] || []), template] }));
+    const copy = { ...formData, [arrayPath]: [...(formData[arrayPath] || []), template] };
+    commitFormData(copy);
   }
   function removeArrayItem(arrayPath: string, index: number) {
-    setFormData((prev: any) => ({ ...prev, [arrayPath]: (prev[arrayPath] || []).filter((_: any, i: number) => i !== index) }));
+    const copy = { ...formData, [arrayPath]: (formData[arrayPath] || []).filter((_: any, i: number) => i !== index) };
+    commitFormData(copy);
   }
 
   function handleGallerySelect(item: { fileUrl: string; type: string }) {
@@ -308,25 +320,28 @@ export default function ProjectDetailPage() {
   async function handleRegenerate() {
     if (!selectedBlock || regenerating) return;
     setRegenerating(true);
+    setShowRegenInput(false);
     try {
       const res = await fetch('/api/studio/regenerate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, blockId: selectedBlock.id, blockType: selectedBlock.type }),
+        body: JSON.stringify({
+          projectId, blockId: selectedBlock.id, blockType: selectedBlock.type,
+          userPrompt: regenPrompt.trim() || undefined,
+        }),
       });
       if (!res.ok) { setRegenerating(false); return; }
       const { data } = await res.json();
-      // 기존 이미지/영상 URL + 스타일 오버라이드 유지
+      // 기존 이미지/영상 URL 유지 (style/elementStyles는 block 최상위 필드 — data와 무관)
       const merged = { ...data };
       const old = selectedBlock.data as any;
       if (old?.heroImageUrl) merged.heroImageUrl = old.heroImageUrl;
       if (old?.imageUrl) merged.imageUrl = old.imageUrl;
       if (old?.videoUrl) merged.videoUrl = old.videoUrl;
-      if (old?.style) merged.style = old.style;
-      if (old?.elementStyles) merged.elementStyles = old.elementStyles;
       const updated = blocks.map(b => b.id === selectedBlock.id ? { ...b, data: merged } : b);
       setBlocks(updated); saveBlocks(updated); setFormData(merged);
     } catch (e) { console.error('Regenerate failed:', e); }
     setRegenerating(false);
+    setRegenPrompt('');
   }
 
   // JSON 저장 (인라인 JSON 편집용)
@@ -334,7 +349,7 @@ export default function ProjectDetailPage() {
     if (!selectedBlock) return;
     try {
       const parsed = JSON.parse(jsonText);
-      setFormData(parsed);
+      commitFormData(parsed);
     } catch { alert('JSON 형식이 올바르지 않습니다'); }
   }
 
@@ -390,7 +405,10 @@ export default function ProjectDetailPage() {
         <div className="w-56 border-r border-ax-border bg-white flex flex-col flex-shrink-0">
           <div className="px-3 py-2 border-b border-ax-border flex items-center justify-between">
             <span className="text-[11px] text-gray-500">{blocks.length}개 블록</span>
-            <button onClick={() => setShowAddBlock(true)} className="text-[11px] text-blue-600 hover:text-blue-800 font-medium">+ 추가</button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowOverlay('templates')} className="text-[11px] text-gray-400 hover:text-gray-600">템플릿</button>
+              <button onClick={() => setShowAddBlock(true)} className="text-[11px] text-blue-600 hover:text-blue-800 font-medium">+ 추가</button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             {blocks.length === 0 ? (
@@ -403,7 +421,7 @@ export default function ProjectDetailPage() {
                 blocks={blocks}
                 onReorder={handleReorder}
                 onToggle={handleToggle}
-                onEdit={(block) => setSelectedBlockId(block.id)}
+                onEdit={(block) => selectBlock(block.id)}
                 onDelete={handleDeleteBlock}
                 selectedBlockId={selectedBlockId}
               />
@@ -435,7 +453,7 @@ export default function ProjectDetailPage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={handleRegenerate}
+                    onClick={() => setShowRegenInput(!showRegenInput)}
                     disabled={regenerating}
                     className="text-[10px] text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded border border-blue-200 disabled:opacity-50"
                   >{regenerating ? '생성 중...' : '카피 재생성'}</button>
@@ -443,13 +461,34 @@ export default function ProjectDetailPage() {
                     onClick={() => { setJsonMode(!jsonMode); if (!jsonMode) setJsonText(JSON.stringify(formData, null, 2)); }}
                     className="text-[10px] text-gray-400 hover:text-gray-600 px-1.5 py-0.5 rounded border border-gray-200"
                   >{jsonMode ? 'Form' : 'JSON'}</button>
-                  <button onClick={() => setSelectedBlockId(null)} className="text-gray-400 hover:text-gray-600">
+                  <button onClick={() => selectBlock(null)} className="text-gray-400 hover:text-gray-600">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                       <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                 </div>
               </div>
+              {/* 재생성 프롬프트 입력 */}
+              {showRegenInput && (
+                <div className="px-4 py-3 border-b border-ax-border bg-blue-50/50">
+                  <textarea
+                    className="w-full text-xs p-2.5 border border-blue-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
+                    rows={2}
+                    placeholder="어떻게 바꾸고 싶은지 설명하세요 (비우면 자동 재작성)"
+                    value={regenPrompt}
+                    onChange={e => setRegenPrompt(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleRegenerate(); } }}
+                  />
+                  <div className="flex gap-1.5 mt-2">
+                    <button onClick={handleRegenerate} disabled={regenerating}
+                      className="text-[11px] bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+                    >{regenerating ? '생성 중...' : '재생성'}</button>
+                    <button onClick={() => { setShowRegenInput(false); setRegenPrompt(''); }}
+                      className="text-[11px] text-gray-400 px-2 py-1 rounded hover:text-gray-600"
+                    >취소</button>
+                  </div>
+                </div>
+              )}
               {/* 편집 폼 */}
               <div className="flex-1 overflow-y-auto p-4">
                 {jsonMode ? (
@@ -464,38 +503,18 @@ export default function ProjectDetailPage() {
                 ) : (
                   <>
                     {inlineEditing && editingField ? (
-                      // 요소 레벨 스타일 (텍스트 클릭 시)
                       <div>
                         <p className="text-[10px] text-blue-500 mb-2">요소: {editingField}</p>
                         <StyleControls
-                          style={(formData.elementStyles || {})[editingField] || {}}
-                          onChange={(s) => {
-                            const es = { ...(formData.elementStyles || {}) };
-                            if (Object.keys(s).length > 0) { es[editingField!] = s; } else { delete es[editingField!]; }
-                            updateField('elementStyles', Object.keys(es).length > 0 ? es : undefined);
-                          }}
+                          style={(selectedBlock.elementStyles || {})[editingField] || {}}
+                          onChange={(s) => updateElementStyle(editingField!, s)}
                           mode="element"
                         />
                       </div>
                     ) : (
-                      // 블록 레벨 스타일 (블록 클릭 시)
                       <StyleControls
-                        style={formData.style || {}}
-                        onChange={(s) => {
-                          // 변경된 속성을 모든 elementStyles에서 제거 (블록 전체 적용)
-                          const oldStyle = formData.style || {};
-                          const changedKeys = Object.keys(s).filter(k => s[k] !== oldStyle[k]);
-                          if (changedKeys.length > 0 && formData.elementStyles) {
-                            const es = { ...(formData.elementStyles) };
-                            for (const field of Object.keys(es)) {
-                              const copy = { ...es[field] };
-                              for (const ck of changedKeys) { delete copy[ck]; }
-                              if (Object.keys(copy).length > 0) { es[field] = copy; } else { delete es[field]; }
-                            }
-                            updateField('elementStyles', Object.keys(es).length > 0 ? es : undefined);
-                          }
-                          updateField('style', s);
-                        }}
+                        style={selectedBlock.style || {}}
+                        onChange={(s) => updateBlockStyle(s)}
                         mode="block"
                       />
                     )}
@@ -582,19 +601,44 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {/* JSON / 출력 오버레이 */}
+      {/* 템플릿 저장 모달 */}
+      {showSaveTemplate && (
+        <SaveTemplateModal
+          projectId={projectId}
+          onSaved={() => setShowSaveTemplate(false)}
+          onClose={() => setShowSaveTemplate(false)}
+        />
+      )}
+
+      {/* JSON / 출력 / 템플릿 오버레이 */}
       {showOverlay && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setShowOverlay(null)}>
           <div className="bg-white rounded-xl shadow-xl w-[800px] max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <h4 className="text-sm font-medium">{showOverlay === 'json' ? 'JSON 데이터' : '출력 결과'}</h4>
-              <button onClick={() => setShowOverlay(null)} className="text-gray-400 hover:text-gray-600 text-sm">닫기</button>
+              <h4 className="text-sm font-medium">
+                {{ json: 'JSON 데이터', output: '출력 결과', templates: '템플릿' }[showOverlay!]}
+              </h4>
+              <div className="flex items-center gap-2">
+                {showOverlay === 'templates' && blocks.length > 0 && (
+                  <button onClick={() => { setShowOverlay(null); setShowSaveTemplate(true); }}
+                    className="text-[11px] text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200">현재 블록 템플릿 저장</button>
+                )}
+                <button onClick={() => setShowOverlay(null)} className="text-gray-400 hover:text-gray-600 text-sm">닫기</button>
+              </div>
             </div>
             <div className="overflow-auto max-h-[75vh] p-5">
-              {showOverlay === 'json' ? (
+              {showOverlay === 'json' && (
                 <JsonEditor blocks={blocks} onApply={(updated) => { setBlocks(updated); saveBlocks(updated); setShowOverlay(null); }} />
-              ) : (
-                <OutputGallery projectId={projectId} />
+              )}
+              {showOverlay === 'output' && <OutputGallery projectId={projectId} />}
+              {showOverlay === 'templates' && (
+                <TemplateList onLoad={(templateBlocks) => {
+                  const withIds = templateBlocks.map((b: any, i: number) => ({
+                    ...b, id: b.id || uuid(), order: i,
+                    data: b.data || {}, images: b.images || [], videos: b.videos || [], visible: b.visible !== false,
+                  }));
+                  setBlocks(withIds); saveBlocks(withIds); setShowOverlay(null);
+                }} />
               )}
             </div>
           </div>
@@ -707,6 +751,8 @@ function JsonEditor({ blocks, onApply }: { blocks: BlockDefinition[]; onApply: (
         videos: b.videos || [],
         visible: b.visible !== undefined ? b.visible : true,
         multiLangData: b.multiLangData || undefined,
+        ...(b.style ? { style: b.style } : {}),
+        ...(b.elementStyles ? { elementStyles: b.elementStyles } : {}),
       }));
       onApply(normalized);
     } catch (e: any) {
@@ -739,6 +785,98 @@ function JsonEditor({ blocks, onApply }: { blocks: BlockDefinition[]; onApply: (
           }} />
         </label>
       </div>
+    </div>
+  );
+}
+
+// 템플릿 저장 모달
+function SaveTemplateModal({ projectId, onSaved, onClose }: { projectId: string; onSaved: () => void; onClose: () => void }) {
+  const [name, setName] = useState('');
+  const [includeCopy, setIncludeCopy] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/templates', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), projectId, includeCopy }),
+      });
+      if (res.ok) onSaved();
+    } catch {}
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-96 p-5" onClick={e => e.stopPropagation()}>
+        <h4 className="text-sm font-medium mb-4">현재 블록을 템플릿으로 저장</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="text-[11px] text-gray-500 block mb-1">템플릿 이름</label>
+            <input className="input text-sm" placeholder="예: 가전제품 기본 레이아웃" value={name} onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSave(); }} autoFocus />
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={includeCopy} onChange={e => setIncludeCopy(e.target.checked)} className="rounded" />
+            <span className="text-xs text-gray-600">카피(텍스트) 포함</span>
+          </label>
+          <p className="text-[10px] text-gray-400">
+            {includeCopy ? '블록 구조 + 스타일 + 카피 텍스트가 저장됩니다.' : '블록 구조 + 스타일만 저장됩니다. 카피는 새로 생성해야 합니다.'}
+          </p>
+          <div className="flex gap-2 pt-2">
+            <button onClick={onClose} className="btn-secondary flex-1 text-xs">취소</button>
+            <button onClick={handleSave} disabled={saving || !name.trim()} className="btn-primary flex-1 text-xs disabled:opacity-50">
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 템플릿 목록 + 불러오기
+function TemplateList({ onLoad }: { onLoad: (blocks: any[]) => void }) {
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/templates').then(r => r.json()).then(d => { setTemplates(d.templates || []); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+
+  async function handleLoad(id: string) {
+    const res = await fetch(`/api/templates/${id}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    onLoad(data.blocks || []);
+  }
+
+  async function handleDelete(id: string) {
+    await fetch(`/api/templates/${id}`, { method: 'DELETE' });
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  }
+
+  if (loading) return <div className="text-center py-12 text-sm text-gray-400">불러오는 중...</div>;
+  if (templates.length === 0) return <div className="text-center py-12 text-sm text-gray-400">저장된 템플릿이 없습니다</div>;
+
+  return (
+    <div className="space-y-2">
+      {templates.map(t => (
+        <div key={t.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+          <div>
+            <p className="text-sm font-medium">{t.name}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {t.blockCount}개 블록 · {t.includeCopy ? '카피 포함' : '구조만'}{t.category ? ` · ${t.category}` : ''}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => handleLoad(t.id)} className="text-[11px] text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200">불러오기</button>
+            <button onClick={() => handleDelete(t.id)} className="text-[11px] text-red-400 hover:text-red-600 px-1.5 py-1">삭제</button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

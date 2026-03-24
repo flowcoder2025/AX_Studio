@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { normalizeBlockData } from '@/lib/blocks/schema';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'ax-studio.db');
 
@@ -71,9 +72,9 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS templates (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    category TEXT NOT NULL,
-    block_types TEXT NOT NULL,
-    block_data TEXT DEFAULT '{}',
+    category TEXT,
+    include_copy INTEGER NOT NULL DEFAULT 0,
+    blocks_json TEXT NOT NULL DEFAULT '[]',
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
 
@@ -82,12 +83,10 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_outputs_project ON outputs(project_id);
 `);
 
-// Migration: 기존 DB에 multi_lang_data 컬럼이 없으면 추가
-try {
-  db.exec(`ALTER TABLE blocks ADD COLUMN multi_lang_data TEXT`);
-} catch {
-  // 이미 존재하면 무시
-}
+// Migrations (기존 DB 호환 — 컬럼 없으면 추가, 있으면 무시)
+try { db.exec(`ALTER TABLE blocks ADD COLUMN multi_lang_data TEXT`); } catch {}
+try { db.exec(`ALTER TABLE templates ADD COLUMN blocks_json TEXT NOT NULL DEFAULT '[]'`); } catch {}
+try { db.exec(`ALTER TABLE templates ADD COLUMN include_copy INTEGER NOT NULL DEFAULT 0`); } catch {}
 
 // Gallery items 테이블 (생성소 결과물)
 db.exec(`
@@ -151,9 +150,14 @@ export function saveBlocks(projectId: string, blocks: any[]): void {
   const tx = db.transaction(() => {
     del.run(projectId);
     for (const b of blocks) {
+      // style/elementStyles를 data JSON 안에 병합하여 저장 (DB 스키마 변경 불필요)
+      const dataForStorage = { ...(b.data || {}) };
+      if (b.style && Object.keys(b.style).length > 0) dataForStorage.__style = b.style;
+      if (b.elementStyles && Object.keys(b.elementStyles).length > 0) dataForStorage.__elementStyles = b.elementStyles;
+
       ins.run(
         b.id, projectId, b.type, b.order, b.source,
-        JSON.stringify(b.data), JSON.stringify(b.images),
+        JSON.stringify(dataForStorage), JSON.stringify(b.images),
         JSON.stringify(b.videos), b.visible ? 1 : 0,
         b.multiLangData ? JSON.stringify(b.multiLangData) : null
       );
@@ -167,17 +171,32 @@ export function getBlocks(projectId: string) {
     `SELECT * FROM blocks WHERE project_id = ? ORDER BY sort_order`
   ).all(projectId) as any[];
 
-  return rows.map(r => ({
-    id: r.id,
-    type: r.type,
-    order: r.sort_order,
-    source: r.source,
-    data: JSON.parse(r.data || '{}'),
-    images: JSON.parse(r.images || '[]'),
-    videos: JSON.parse(r.videos || '[]'),
-    visible: r.visible === 1,
-    ...(r.multi_lang_data ? { multiLangData: JSON.parse(r.multi_lang_data) } : {}),
-  }));
+  return rows.map(r => {
+    const raw = JSON.parse(r.data || '{}');
+
+    // 1. style/elementStyles 추출 (data에서 분리)
+    const style = raw.__style || raw.style || undefined;
+    const elementStyles = raw.__elementStyles || raw.elementStyles || undefined;
+    delete raw.__style; delete raw.__elementStyles;
+    delete raw.style; delete raw.elementStyles;
+
+    // 2. 레거시 키 정규화 (schema.ts SSOT 기반)
+    const data = normalizeBlockData(r.type, raw);
+
+    return {
+      id: r.id,
+      type: r.type,
+      order: r.sort_order,
+      source: r.source,
+      data,
+      images: JSON.parse(r.images || '[]'),
+      videos: JSON.parse(r.videos || '[]'),
+      visible: r.visible === 1,
+      ...(r.multi_lang_data ? { multiLangData: JSON.parse(r.multi_lang_data) } : {}),
+      ...(style ? { style } : {}),
+      ...(elementStyles ? { elementStyles } : {}),
+    };
+  });
 }
 
 export function updateBlock(blockId: string, data: any): void {
@@ -233,18 +252,63 @@ export function getOutputs(projectId: string) {
 
 // === Templates ===
 
-export function saveTemplate(id: string, name: string, category: string, blockTypes: string[], blockData: any): void {
+export interface TemplateRecord {
+  id: string;
+  name: string;
+  category: string | null;
+  include_copy: number;
+  blocks_json: string;
+  created_at: number;
+}
+
+export function saveTemplate(
+  id: string,
+  name: string,
+  category: string | null,
+  includeCopy: boolean,
+  blocks: any[]
+): void {
+  // 블록에서 이미지/영상 참조 제거 (프로젝트 고유 데이터)
+  const cleaned = blocks.map(b => {
+    const entry: any = {
+      type: b.type,
+      order: b.order,
+      source: b.source || 'claude',
+      visible: b.visible !== false,
+    };
+    if (b.style && Object.keys(b.style).length > 0) entry.style = b.style;
+    if (b.elementStyles && Object.keys(b.elementStyles).length > 0) entry.elementStyles = b.elementStyles;
+    if (includeCopy && b.data && Object.keys(b.data).length > 0) {
+      // data에서 모든 이미지/영상 URL 제거 (프로젝트 고유 경로)
+      const data = JSON.parse(JSON.stringify(b.data));
+      delete data.heroImageUrl; delete data.imageUrl; delete data.videoUrl; delete data.thumbnailUrl;
+      // 중첩 배열 내 imageUrl 제거
+      for (const key of Object.keys(data)) {
+        if (Array.isArray(data[key])) {
+          data[key] = data[key].map((item: any) => {
+            if (item && typeof item === 'object' && item.imageUrl) {
+              const { imageUrl, ...rest } = item;
+              return rest;
+            }
+            return item;
+          });
+        }
+      }
+      entry.data = data;
+    }
+    return entry;
+  });
   db.prepare(
-    `INSERT INTO templates (id, name, category, block_types, block_data) VALUES (?, ?, ?, ?, ?)`
-  ).run(id, name, category, JSON.stringify(blockTypes), JSON.stringify(blockData));
+    `INSERT INTO templates (id, name, category, include_copy, blocks_json) VALUES (?, ?, ?, ?, ?)`
+  ).run(id, name, category, includeCopy ? 1 : 0, JSON.stringify(cleaned));
 }
 
-export function listTemplates() {
-  return db.prepare('SELECT * FROM templates ORDER BY created_at DESC').all() as any[];
+export function listTemplates(): TemplateRecord[] {
+  return db.prepare('SELECT * FROM templates ORDER BY created_at DESC').all() as TemplateRecord[];
 }
 
-export function getTemplate(id: string) {
-  return db.prepare('SELECT * FROM templates WHERE id = ?').get(id) as any;
+export function getTemplate(id: string): TemplateRecord | null {
+  return (db.prepare('SELECT * FROM templates WHERE id = ?').get(id) as TemplateRecord) || null;
 }
 
 export function deleteTemplate(id: string): void {

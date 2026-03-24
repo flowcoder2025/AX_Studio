@@ -11,6 +11,15 @@ export type BlockType =
 
 export type DataSource = 'claude' | 'comfyui' | 'ffmpeg' | 'puppeteer' | 'user';
 
+export interface BlockStyleOverride {
+  fontSize?: number;
+  textAlign?: 'left' | 'center' | 'right';
+  color?: string;
+  fontWeight?: number;
+  bgColor?: string;
+  padding?: number;
+}
+
 export interface BlockDefinition {
   id: string;
   type: BlockType;
@@ -22,6 +31,9 @@ export interface BlockDefinition {
   visible: boolean;
   multiLangData?: Record<string, any>;
   activeLanguage?: string;
+  // 스타일은 data와 분리 — Claude가 건드릴 수 없음
+  style?: BlockStyleOverride;
+  elementStyles?: Record<string, BlockStyleOverride>;
 }
 
 // Union type for all block data
@@ -63,10 +75,12 @@ export interface IngredientData {
 }
 
 export interface TrustData {
+  title?: string;
   metrics: { value: string; label: string }[];
 }
 
 export interface ReviewData {
+  title?: string;
   reviews: {
     rating: number;
     text: string;
@@ -81,6 +95,7 @@ export interface SpecData {
 }
 
 export interface FAQData {
+  title?: string;
   faqs: { question: string; answer: string }[];
 }
 
@@ -104,10 +119,12 @@ export interface CompareData {
 }
 
 export interface CertificationData {
+  title?: string;
   certifications: { name: string; imageUrl?: string; description?: string }[];
 }
 
 export interface CTAData {
+  title?: string;
   packages: {
     name: string;
     price: string;

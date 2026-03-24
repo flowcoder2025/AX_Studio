@@ -1,6 +1,7 @@
 // Claude prompt templates for AX Studio pipeline
 
 import { CategoryId, getCategoryById } from '@/lib/templates/categories';
+import { buildPromptKeyStructures } from '@/lib/blocks/schema';
 
 // Product analysis prompt — extracts structured data from product info
 export function buildAnalysisPrompt(
@@ -75,26 +76,10 @@ Analysis: ${JSON.stringify(analysis)}
 Generate copy for these blocks: ${blockTypes.join(', ')}
 
 ${langInstructions}
-Use EXACTLY these JSON key names for each block. The array key name is DIFFERENT per block type — use the EXACT key shown below:
-- hero: { "headline": "", "subheadline": "", "kpis": [{"value":"", "label":""}] }
-- painpoint: { "title": "", "painpoints": ["고민1", "고민2", "고민3"] }
-- solution: { "title": "", "solutions": [{"title": "", "description": ""}] }
-- feature: { "title": "", "features": [{"title": "", "description": ""}] }
-- ingredient/tech: { "title": "", "ingredients": [{"name": "", "amount": "", "benefit": ""}] }
-- trust: { "metrics": [{"value": "", "label": ""}] }
-- review: { "reviews": [{"rating": 5, "text": "", "author": "", "meta": ""}] }
-- spec: { "title": "", "specs": [{"key": "", "value": ""}] }
-- faq: { "faqs": [{"question": "", "answer": ""}] }
-- howto: { "title": "", "steps": [{"title": "", "description": ""}] }
-- cta: { "packages": [{"name": "", "price": "", "description": ""}], "buttonText": "" }
-- compare: { "title": "제품명 vs 일반 제품", "columns": ["제품명", "일반 제품"], "rows": [{"label": "비교항목", "values": ["제품값", "일반값"]}] }
-  IMPORTANT for compare: "values" array length MUST equal "columns" array length. Every cell must have a value, no empty strings.
-- certification: { "certifications": [{"name": "", "description": ""}] }
-- size_guide: { "modelInfo": "", "headers": ["S","M","L"], "rows": [{"label": "", "values": []}], "highlightColumn": 1 }
-- compatibility: { "title": "", "devices": [{"name": "", "compatible": true}], "note": "" }
-- recipe: { "recipes": [{"title": "", "steps": ["단계1", "단계2"]}] }
-- pricing: { "plans": [{"name": "", "price": "", "features": ["기능1"], "featured": false}] }
-- material: { "title": "", "materials": [{"name": "", "description": ""}] }
+Use EXACTLY these JSON key names for each block:
+${buildPromptKeyStructures(blockTypes)}
+IMPORTANT for compare: "values" array length MUST equal "columns" array length. Every cell must have a value.
+Do NOT include "style" or "elementStyles" — only content data.
 
 Respond ONLY with valid JSON.`;
 }
